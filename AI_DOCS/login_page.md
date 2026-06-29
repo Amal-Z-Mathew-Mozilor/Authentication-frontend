@@ -20,6 +20,10 @@ the user via `/me`). Also fix the currently-broken "Sign in" link on the signup 
 - On **account lock**, show the proper lock message **with the time, taken from the backend**
   (never computed on the client).
 - On **success**, redirect to `/home` (which fetches `/me`).
+- On **unverified email** (`401 "pls verify email"`), **redirect to the Verification
+  Notification page** (`/verification-required`) instead of showing a banner — matching the
+  login flowchart's "Go to Verification Notification page" branch. See
+  `verification_notice_page.md`.
 - Replace the broken `<a href="/pulse/users/login">Sign in</a>` in `SignupPage` with a real
   link to `/login`.
 
@@ -63,8 +67,8 @@ Pipeline       : loginMiddleware → login controller
 | `200` | `"login sucessfull"` | login controller | Cookies set → redirect to `/home` |
 | `401` | `"invalid credential"` / `"Invalid credentials"` | controller (no user / wrong password) | Show message (generic auth error) |
 | `401` | `"Account is locked. Try again after <N> seconds."` **or** `"Account is locked pls try again after<N>"` | controller (account lock) | **Show the backend message verbatim** — it already contains the remaining time |
-| `401` | `"pls verify email"` | controller (unverified) | Show message |
-| `429` | `"Too many login attempts."`, `errors: { retryAfter: <seconds> }` | loginMiddleware (IP rate limit) | Show message + the `retryAfter` seconds from the backend |
+| `401` | `"pls verify email"` | controller (unverified) | **Redirect to `/verification-required`** (Verification Notification page) — not a banner |
+| `429` | `"Too many login attempts."`, `errors: { retryAfter: <seconds> }` | loginMiddleware (IP rate limit) | Show message + the `retryAfter` time, **converted from the backend's seconds to minutes** |
 | `422` | `"Invalid credentials"`, `errors: [ { path:"email", msg } ]` | loginMiddleware (email validator) | Show the email error inline |
 
 ### Lock / timing — must come from the backend
@@ -81,6 +85,11 @@ server**; the client only displays it:
 
 > The client must **not** calculate or hard-code any lock duration — it always reflects what
 > the backend returns.
+>
+> **Display unit:** the backend returns the wait time in **seconds**; the page converts it to
+> **minutes** for display (e.g. `891s` → "15 minutes"). This applies to both the `429` retry
+> time and the account-lock `401` message. The underlying value still comes only from the
+> backend — the frontend only changes the unit shown.
 
 ---
 
@@ -105,6 +114,13 @@ server**; the client only displays it:
   > Note: the request said "/forget"; the actual route built earlier is `/forgotPassword`.
   > Using `/forgotPassword` so the link works. (Confirm if you'd rather rename the route.)
 
+### Unverified email → Verification Notification page
+
+When login returns `401` with the unverified message (`"pls verify email"`), the page detects
+it (e.g. `/verify/i.test(data.message)`) and `navigate()`s to **`/verification-required`**
+instead of showing the banner. That page tells the user to verify their email and offers a
+**Back to login** button. (Full spec in `verification_notice_page.md`.)
+
 ### Success → `/home`
 
 - On `200`, the backend sets the auth cookies; the page calls `navigate('/home')`.
@@ -125,6 +141,11 @@ server**; the client only displays it:
 > option which direct to /forget on when the account gets locked give the proper lock message
 > with time which should be compulsorily fetched from the backend and should show it and on
 > sucessful login it should map to the //home witch will fetch /me from the backend
+
+### Prompt 2 — Verification redirect (verbatim)
+
+> i think you show the verifcation page with a go back to login button also edit login.md file
+> where you specifcity about this verification and also give .md file for this
 
 ---
 
@@ -153,7 +174,7 @@ server**; the client only displays it:
 - [ ] Wrong credentials → backend message shown.
 - [ ] Account locked → backend lock message **with its time** shown (not computed client-side).
 - [ ] IP rate limit (`429`) → message + `retryAfter` seconds from the backend shown.
-- [ ] Unverified email (`pls verify email`) → message shown.
+- [ ] Unverified email (`pls verify email`) → redirect to `/verification-required` (notice page).
 - [ ] Signup page "Sign in" link points to `/login`.
 - [ ] Visual style matches the existing pages.
 
@@ -162,7 +183,7 @@ server**; the client only displays it:
 1. **Password validation extent:** required-only (recommended) vs. full signup policy. Plan
    assumes required-only.
 2. **Forgot route:** using existing `/forgotPassword` (you wrote `/forget`). Confirm or rename.
-3. **Unverified email:** just show the message now; optionally add a "resend verification"
-   action later.
+3. **Unverified email:** redirect to the Verification Notification page
+   (`/verification-required`) with a Back-to-login button (see `verification_notice_page.md`).
 4. **Error UI:** banner vs. toast for auth/lock errors — plan leans banner for the lock case
    so the time is clearly visible.
