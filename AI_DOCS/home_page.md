@@ -65,7 +65,7 @@ credentials: include
 |-----------|-------------|
 | Page loads | Fetch `/me`; show a brief loading state |
 | `200` | Show `Welcome, <email>` + Account menu |
-| `401` / not authenticated | Redirect to `/` (signup) — or show a "please sign in" message |
+| `401` / `403` (not authenticated or revoked token) | Redirect to `/login` |
 | Network / other error | Toast (consistent with other pages) |
 | Click **Account** | Toggle a dropdown menu in the top-right |
 | Click **Change password** (in menu) | Placeholder for now — no password change yet (e.g. a disabled/"coming soon" affordance). Final behavior defined in a later plan. |
@@ -119,7 +119,8 @@ Plan: go with **option 1** so Signup/Forgot remain unchanged and `/home` opts in
 
 ### Auth / redirect
 
-If `/me` returns `401`, the page treats the user as not logged in and redirects to `/`.
+If `/me` returns `401` **or `403`** (missing/expired/invalid token, or a revoked/blacklisted
+token after logout), the page treats the user as not logged in and redirects to `/login`.
 (See the dev cookie-domain caveat noted during the verify-email discussion — worth
 confirming `/me` actually receives the auth cookie through the Vite proxy.)
 
@@ -168,7 +169,7 @@ confirming `/me` actually receives the auth cookie through the Vite proxy.)
 - [ ] Account control appears top-right of the header (only on `/home`).
 - [ ] Account menu contains **Change password** and **Logout** options (placeholders, no action yet).
 - [ ] Reached after both email verification and login.
-- [ ] Not-authenticated (`401`) redirects to `/`.
+- [ ] Not-authenticated (`401`) or revoked token (`403`) redirects to `/login`.
 - [ ] Visual style matches Signup / Forgot Password.
 
 ### Deferred to a later plan
