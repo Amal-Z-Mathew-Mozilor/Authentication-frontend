@@ -30,8 +30,8 @@ In scope (this step):
 Out of scope (later steps):
 - **Change password functionality** — the menu option exists, but clicking it does not yet
   perform a password change. Its behavior is a placeholder for a later implementation.
-- **Logout functionality** — the menu option exists, but it does not yet log the user out
-  (would call `GET /pulse/users/logout`). Placeholder for a later implementation.
+- ~~**Logout functionality**~~ — **implemented**: the Account → Logout item calls
+  `GET /pulse/users/logout` (credentials included) and then redirects to the landing page (`/`).
 - Any backend changes.
 
 ---
@@ -69,7 +69,7 @@ credentials: include
 | Network / other error | Toast (consistent with other pages) |
 | Click **Account** | Toggle a dropdown menu in the top-right |
 | Click **Change password** (in menu) | Placeholder for now — no password change yet (e.g. a disabled/"coming soon" affordance). Final behavior defined in a later plan. |
-| Click **Logout** (in menu) | Placeholder for now — does not log out yet (would later call `GET /pulse/users/logout`). Final behavior defined in a later plan. |
+| Click **Logout** (in menu) | Calls `GET /pulse/users/logout` (credentials included), then redirects to the landing page (`/`). |
 
 ### Account menu
 
@@ -174,4 +174,4 @@ confirming `/me` actually receives the auth cookie through the Vite proxy.)
 ### Deferred to a later plan
 
 - Implementing the actual **Change password** flow (form + `POST /pulse/users/changePassword`).
-- Implementing the actual **Logout** action (`GET /pulse/users/logout`, then redirect to `/`).
+- ~~Implementing the actual **Logout** action~~ — **done** (`GET /pulse/users/logout` → redirect to `/`).
