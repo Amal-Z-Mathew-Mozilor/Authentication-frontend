@@ -11,7 +11,8 @@ the backend `POST /pulse/users/forgotPassword` endpoint, which sends the reset e
 ### Goals
 
 - Reachable from the **"Forgot your password?"** link on the signup page.
-- Validate the **email policy** client-side (required + valid email format) before sending.
+- Email is validated by the **backend** (`forgotPasswordEmail` validator → `422`); the page
+  shows those errors inline (no client-side email check).
 - Submit the email to `POST /pulse/users/forgotPassword`.
 - Show a neutral "check your inbox" confirmation on success.
 - Handle validation (`422`), other server errors, and network failures.
@@ -50,12 +51,12 @@ Body: { "email": "you@domain.com" }
 | other | Toast with the message |
 | (network) | Toast prompting to check the backend |
 
-### Email Policy (checked client-side before submit)
+### Email validation — backend-driven (no client-side check)
 
-- Email is required (non-empty).
-- Must be a valid email format (`something@domain.tld`).
-
-Mirrors the backend `forgotPasswordEmail()` validator, which runs `notEmpty().bail().isEmail()`.
+Email is validated by the **backend** `forgotPasswordEmail()` validator
+(`notEmpty().bail().isEmail()`). The page does **not** validate client-side; it submits and
+shows the backend's `422` errors ("Email is required" / "Invalid email address") inline on the
+email field. (Consistent with the login page.)
 
 ---
 
@@ -66,9 +67,6 @@ Mirrors the backend `forgotPasswordEmail()` validator, which runs `notEmpty().ba
 ```
 Signup page ──"Forgot your password?"──► /forgotPassword
                                               │  enter email
-                                              ▼
-                                   client-side email policy check
-                                              │  (valid)
                                               ▼
                               POST /pulse/users/forgotPassword  (via Vite proxy)
                                               │
@@ -151,13 +149,13 @@ Then: from `/`, click **"Forgot your password?"** → `/forgotPassword` → ente
 
 ### Verification
 
-- Empty email → inline "Email is required" (no request sent).
-- Malformed email → inline "Invalid email address" (no request sent).
+- Empty email → backend `422` "Email is required" → shown inline.
+- Malformed email → backend `422` "Invalid email address" → shown inline.
 - Valid email → 200, "Check your inbox" card (neutral; no account-existence leak).
 - Backend down → network error toast.
 
 ### Expected Benefits
 
 - Familiar account-recovery entry point, consistent with the rest of the UI.
-- Email policy enforced client-side before hitting the network.
+- Email validated by the backend validator; the page shows those errors (consistent with login).
 - No leak of whether an email is registered.

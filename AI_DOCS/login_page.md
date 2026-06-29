@@ -14,8 +14,9 @@ the user via `/me`). Also fix the currently-broken "Sign in" link on the signup 
 ### Goals
 
 - Frontend route `/login` with an email + password form.
-- **Client-side validation** of both fields before submitting (email format + required;
-  password required).
+- **Email validated by the backend** (no client-side email check) — show the backend's `422`
+  email errors inline. A minimal client-side **password-required** guard remains (the login
+  route has no password validator).
 - A **Forgot password?** link that navigates to the existing forgot-password page.
 - On **account lock**, show the proper lock message **with the time, taken from the backend**
   (never computed on the client).
@@ -51,14 +52,17 @@ Fetch          : credentials: 'include'   (sets accessToken/refreshToken httpOnl
 Pipeline       : loginMiddleware → login controller
 ```
 
-### Client-side validation (before the request)
+### Validation
 
-- **Email:** required + valid email format → else inline "Email is required" / "Invalid email address".
-- **Password:** required (non-empty) → else inline "Password is required".
-
-> Decision: login does **not** re-enforce the full signup password policy (length/upper/
-> special/etc.). Login only needs the field present; complexity is a signup concern, and
-> enforcing it here could reject otherwise-valid credentials. (See Open Items.)
+- **Email — backend-driven (no client-side check).** `loginMiddleware` runs
+  `loginEmailValidator`, so an empty/invalid email comes back as `422` ("Email is required" /
+  "Invalid email address"). The page shows those errors inline on the email field — consistent
+  with Signup and Forgot Password.
+- **Password — minimal client-side `required` guard only.** The login route has **no password
+  validator**, so without this guard an empty password would reach the controller and be counted
+  as a failed login attempt (toward the lockout). Full password policy is **not** enforced on
+  login. (To make password fully backend-driven, add a `notEmpty` password validator to the
+  login route — backend change, not done.)
 
 ### Backend responses to handle (actual)
 
@@ -147,6 +151,11 @@ instead of showing the banner. That page tells the user to verify their email an
 > i think you show the verifcation page with a go back to login button also edit login.md file
 > where you specifcity about this verification and also give .md file for this
 
+### Prompt 3 — Backend-driven email validation (verbatim)
+
+> i want login page and forgot password page to validate email based on the backend validator
+> it should be consistent to login page and forgot i have now also update their .md file also
+
 ---
 
 ## 5. Supporting Documentation
@@ -169,7 +178,8 @@ instead of showing the banner. That page tells the user to verify their email an
 ### Acceptance Criteria
 
 - [ ] `/login` renders an email + password form with a Forgot password link and a link to sign up.
-- [ ] Empty/invalid fields are caught client-side before any request.
+- [ ] Empty/invalid email is reported by the backend (`422`) and shown inline (no client check).
+- [ ] Empty password is caught by the client-side required guard (avoids burning a lock attempt).
 - [ ] `200` → redirect to `/home`, which loads `/me`.
 - [ ] Wrong credentials → backend message shown.
 - [ ] Account locked → backend lock message **with its time** shown (not computed client-side).
@@ -180,8 +190,9 @@ instead of showing the banner. That page tells the user to verify their email an
 
 ### Open Items / Decisions
 
-1. **Password validation extent:** required-only (recommended) vs. full signup policy. Plan
-   assumes required-only.
+1. **Password validation:** decided — email is backend-driven; password keeps a minimal
+   client-side `required` guard only (login route has no password validator). Optionally add a
+   `notEmpty` password validator to the backend login route to make it fully backend-driven.
 2. **Forgot route:** using existing `/forgotPassword` (you wrote `/forget`). Confirm or rename.
 3. **Unverified email:** redirect to the Verification Notification page
    (`/verification-required`) with a Back-to-login button (see `verification_notice_page.md`).
