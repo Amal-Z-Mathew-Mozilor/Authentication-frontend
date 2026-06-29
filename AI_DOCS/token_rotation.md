@@ -1,7 +1,9 @@
-# JWT Token Rotation (Frontend Interceptor) Feature Plan
+# JWT Token Rotation (Frontend Interceptor)
 
-> Plan written **before** implementation. No code until approved.
-> Frontend-only — the backend `POST /pulse/users/rotateToken` already exists.
+> Frontend-only — the backend `POST /pulse/users/rotateToken` already exists. **Status: implemented.**
+> **Design note (as built):** `apiFetch` does **not** redirect itself. On a failed rotation it
+> returns the original `401`, and the caller's existing `401`/`403` handling does the SPA redirect
+> (so logout lands on `/`, and `/me` / `/changePassword` land on `/login`). No `window.location`.
 
 ## 1. Plan
 
@@ -62,12 +64,8 @@ export async function apiFetch(url, options = {}) {
 
   if (res.status === 401 && (await isExpired(res))) {   // peek message via res.clone()
     const ok = await refreshOnce()                      // single-flight rotateToken
-    if (ok) {
-      res = await fetch(url, opts)                      // retry once (new cookie auto-sent)
-    } else {
-      redirectToLogin()                                 // window.location.replace('/login')
-      return res
-    }
+    if (ok) res = await fetch(url, opts)                // retry once (new cookie auto-sent)
+    // if NOT ok → fall through and return the original 401; the caller redirects
   }
   return res
 }
@@ -121,13 +119,10 @@ Public calls (signup, login, forgot, reset, verify, resend) do **not** need it.
 
 | File | Change |
 |------|--------|
-| `frontend/src/utils/apiFetch.js` *(new)* | Interceptor wrapper: rotate-on-expired + retry + single-flight |
-| `frontend/src/HomePage.jsx` | Use `apiFetch` for `GET /me` |
-| `frontend/src/ChangePasswordPage.jsx` | Use `apiFetch` for `POST /changePassword` |
-| `frontend/src/Header.jsx` *(optional)* | Use `apiFetch` for logout |
-
-> Note: `frontend/src/` has no `utils/` folder yet — the wrapper introduces one (or it can live at
-> `frontend/src/apiFetch.js`). Decision below.
+| `frontend/src/apiFetch.js` *(new)* | Interceptor wrapper: rotate-on-expired + retry + single-flight |
+| `frontend/src/HomePage.jsx` | Uses `apiFetch` for `GET /me` |
+| `frontend/src/ChangePasswordPage.jsx` | Uses `apiFetch` for `POST /changePassword` |
+| `frontend/src/Header.jsx` | Uses `apiFetch` for `GET /logout` |
 
 ### Acceptance Criteria
 
@@ -138,10 +133,11 @@ Public calls (signup, login, forgot, reset, verify, resend) do **not** need it.
 - [ ] At most one retry per request (no infinite loop).
 - [ ] No manual token handling — relies on the refreshed httpOnly cookie.
 
-### Open Items / Decisions
+### Decisions (resolved)
 
-1. **Util location:** `frontend/src/utils/apiFetch.js` (new folder) vs. `frontend/src/apiFetch.js`.
-2. **Redirect mechanism:** `window.location.replace('/login')` (simple, chosen) vs. an event the
-   app listens to for an in-SPA `navigate`.
-3. **Wrap logout?** Low value (it already redirects). Default: skip.
-4. **Expired-message match:** match `/expired/i` on the `message` (chosen) vs. a stricter exact match.
+1. **Util location:** `frontend/src/apiFetch.js` (flat, matches existing structure). ✅
+2. **Redirect mechanism:** `apiFetch` returns the failed `401`; the **caller** redirects (SPA
+   `navigate`). No `window.location`. So `/me` & `/changePassword` → `/login`; logout → `/`. ✅
+3. **Wrap logout?** Yes — included (rotation lets an expired-token logout still succeed; on
+   refresh-fail it returns 401 and `handleLogout` redirects to `/` regardless). ✅
+4. **Expired-message match:** `/expired/i` on the `message`. ✅

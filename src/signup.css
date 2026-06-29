@@ -1,0 +1,368 @@
+:root {
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --border: #e3e7ec;
+  --text: #1f2733;
+  --muted: #6b7682;
+  --faint: #99a3ad;
+  --accent: #3b6ef0;
+  --accent-soft: #eaf0fe;
+  --error: #d6453d;
+  --error-soft: #fdecea;
+  --ok: #1f9d6b;
+}
+
+.page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---- header ---- */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 18px 28px;
+  background: var(--accent);
+}
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+}
+.logo-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+}
+.logo-badge svg {
+  width: 18px; height: 18px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.logo-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+/* main area centers the card in the space below the header */
+.main {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 32px 18px;
+}
+
+/* ---- account menu (header, opt-in) ---- */
+.account {
+  position: relative;
+  margin-left: auto;
+}
+.account-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 7px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.account-btn:hover { background: rgba(255, 255, 255, 0.22); }
+.account-btn .caret { font-size: 11px; }
+
+.account-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px -12px rgba(31, 39, 51, 0.35);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  z-index: 40;
+  animation: menu-in 0.15s ease;
+}
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.account-menu button {
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.account-menu button:hover { background: var(--bg); }
+
+/* ---- home card ---- */
+.home-card { text-align: center; }
+.home-card .mail {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 18px;
+  margin: 6px 0 0;
+}
+
+/* ---- card ---- */
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px 28px;
+  box-shadow: 0 6px 24px -16px rgba(31, 39, 51, 0.4);
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+.subtitle {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0 0 24px;
+}
+.subtitle a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.subtitle a:hover { text-decoration: underline; }
+
+form { display: flex; flex-direction: column; gap: 18px; }
+
+/* ---- fields ---- */
+.field { display: flex; flex-direction: column; }
+
+.label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 7px;
+}
+.label .hint {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--faint);
+}
+
+.input-row { position: relative; display: flex; align-items: center; }
+
+input {
+  width: 100%;
+  font-size: 14.5px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input::placeholder { color: #b6bec7; }
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.field.invalid input {
+  border-color: var(--error);
+  box-shadow: 0 0 0 3px var(--error-soft);
+}
+
+.peek {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0;
+  cursor: pointer;
+}
+.peek:hover { color: var(--accent); }
+
+/* per-field error list */
+.errlist {
+  list-style: none;
+  margin: 7px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.errlist li {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--error);
+}
+
+/* password policy checklist */
+.policy {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 14px;
+  margin-top: 10px;
+}
+.policy span {
+  font-size: 12px;
+  color: var(--faint);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+.policy span::before {
+  content: "○";
+  font-size: 10px;
+}
+.policy span.met { color: var(--ok); }
+.policy span.met::before { content: "●"; }
+
+/* ---- submit ---- */
+.submit {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: 0;
+  border-radius: 9px;
+  padding: 13px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.submit:hover:not(:disabled) { background: #2f5fd8; }
+.submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.submit.loading { color: transparent; position: relative; }
+.submit.loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* auth error banner (login: bad creds / locked / rate limit / verify) */
+.banner {
+  background: var(--error-soft);
+  border: 1px solid rgba(214, 69, 61, 0.3);
+  border-left: 3px solid var(--error);
+  color: #8a2b25;
+  font-size: 13.5px;
+  line-height: 1.45;
+  padding: 11px 13px;
+  border-radius: 9px;
+  margin-bottom: 18px;
+}
+
+/* secondary link under the form */
+.alt-link {
+  text-align: center;
+  margin: 18px 0 0;
+  font-size: 13.5px;
+}
+.alt-link a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.alt-link a:hover { text-decoration: underline; }
+
+/* ---- toast ---- */
+.toast {
+  position: fixed;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 90vw;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--error);
+  border-radius: 10px;
+  padding: 13px 18px;
+  font-size: 14px;
+  color: var(--text);
+  box-shadow: 0 10px 30px -12px rgba(31, 39, 51, 0.35);
+  cursor: pointer;
+  z-index: 50;
+  animation: toast-in 0.25s ease;
+}
+.toast-icon {
+  flex: none;
+  width: 20px; height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--error);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---- success state ---- */
+.card.success { text-align: center; }
+.success .check {
+  width: 54px; height: 54px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--ok);
+  background: rgba(31, 157, 107, 0.1);
+  font-size: 26px;
+}
+.success h2 { font-size: 20px; font-weight: 600; margin: 0 0 8px; }
+.success p { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 auto; max-width: 32ch; }
+.success .mail { color: var(--accent); font-weight: 500; margin-top: 10px; }
+
+/* status-icon color variants (expired / invalid) */
+.success .check.warn { color: #b07900; background: rgba(176, 121, 0, 0.12); }
+.success .check.bad  { color: var(--error); background: var(--error-soft); }
+
+/* resend button centered in the status card */
+.resend-btn { margin: 4px auto 0; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to   { opacity: 1; transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

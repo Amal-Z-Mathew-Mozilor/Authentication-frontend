@@ -1,0 +1,26 @@
+# Frontend dev container — run with:  docker compose up
+#
+# Installs dependencies INSIDE the container (your host stays clean — no local npm install),
+# and serves the Vite dev server on http://localhost:5173.
+services:
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    # Install deps (into the container's node_modules) then start Vite.
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount the source for live editing / HMR…
+      - ./:/app
+      # …but keep node_modules INSIDE the container (anonymous volume), so the host's
+      # missing node_modules doesn't shadow the ones installed above.
+      - /app/node_modules
+    environment:
+      # The backend runs on the HOST, not in this container, so reach it via host.docker.internal.
+      - VITE_PROXY_TARGET=http://host.docker.internal:8000
+      # Reliable file watching for HMR across the Docker bind mount (esp. macOS).
+      - CHOKIDAR_USEPOLLING=true
+    # Lets host.docker.internal resolve on Linux too (Docker Desktop on macOS/Windows has it built-in).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
