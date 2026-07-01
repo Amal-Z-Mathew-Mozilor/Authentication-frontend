@@ -56,9 +56,11 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // Expired / already-used reset token → go to the resend page (resend can still work)
+      // Expired / already-used reset token → go to the resend page (resend can still work).
+      // Pass the reason so the page shows the right wording.
       if (res.status === 401 && /(expired|used)/i.test(data.message || '')) {
-        navigate(`/reset-expired/${token}`)
+        const reason = /used/i.test(data.message) ? 'used' : 'expired'
+        navigate(`/reset-expired/${token}`, { state: { reason } })
         return
       }
 

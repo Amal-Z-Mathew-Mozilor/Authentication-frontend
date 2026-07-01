@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router-dom'
 import Header from './Header.jsx'
 import './signup.css'
 
 export default function ResetExpiredPage() {
   const { token } = useParams()
+  const { state } = useLocation()
+  const used = state?.reason === 'used'   // used vs expired → different wording (resend works either way)
   const [status, setStatus] = useState('idle')   // idle | sending | sent
   const [toast, setToast] = useState(null)
 
@@ -70,8 +72,12 @@ export default function ResetExpiredPage() {
       <main className="main">
         <div className="card success">
           <div className="check warn">⏱</div>
-          <h2>Reset link expired</h2>
-          <p>This password reset link has expired. Request a new one below.</p>
+          <h2>{used ? 'Reset link already used' : 'Reset link expired'}</h2>
+          <p>
+            {used
+              ? 'This password reset link has already been used. Request a new one below.'
+              : 'This password reset link has expired. Request a new one below.'}
+          </p>
           <button
             type="button"
             className="submit resend-btn"
