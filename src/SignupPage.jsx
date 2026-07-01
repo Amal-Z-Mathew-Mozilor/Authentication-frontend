@@ -20,13 +20,14 @@ const EMPTY_ERRORS = { email: [], password: [] }
 export default function SignupPage() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState(EMPTY_ERRORS)
-  const [toast, setToast] = useState(null)        // { message }
-  const [status, setStatus] = useState('idle')    // idle | loading | success
+  const [toast, setToast] = useState(null)        
+  const [status, setStatus] = useState('idle')    
   const [successMsg, setSuccessMsg] = useState('')
   const [showPw, setShowPw] = useState(false)
 
-  // auto-dismiss the toast after a few seconds
-  useEffect(() => {
+
+
+ useEffect(() => {
     if (!toast) return
     const t = setTimeout(() => setToast(null), 4000)
     return () => clearTimeout(t)
