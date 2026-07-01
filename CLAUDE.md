@@ -1,152 +1,144 @@
 # Frontend — CLAUDE.md
 
-Guidance for working in the `frontend/` folder. This is the React client for the
-authentication backend that lives in `../backend`.
+Guidance for working in the `frontend/` folder. This is the React client for the Pulse
+authentication backend (`../backend`, a separate repo).
 
 ## Stack
 
 - **React 19** (function components + hooks only)
-- **Vite 8** as dev server / bundler
-- **Plain JavaScript / JSX** — no TypeScript (despite `@types/*` being present)
-- **ESLint** (flat config in `eslint.config.js`)
-- ES modules (`"type": "module"`)
+- **Vite 8** (dev server / bundler), **react-router-dom** for routing
+- **Plain JavaScript / JSX** — no TypeScript
+- **ESLint** (flat config in `eslint.config.js`), ES modules (`"type": "module"`)
+- No component/UI library and no icon package — UI is built with plain elements + `signup.css`
+  classes and inline SVGs.
 
 ## Commands
 
-Run all commands from the `frontend/` directory:
+Run from `frontend/`:
 
 ```bash
-npm run dev      # start Vite dev server (default http://localhost:5173)
+npm run dev      # Vite dev server — pinned to http://localhost:5173 (strictPort)
 npm run build    # production build to dist/
-npm run preview  # serve the production build locally
-npm run lint     # run ESLint over the project
+npm run preview  # serve the production build
+npm run lint     # ESLint
+docker compose up   # run the dev server in a container (installs deps inside; serves :5173)
 ```
 
 ## Structure
 
 ```
-frontend/
-├── index.html        # Vite entry HTML (#root mount point)
-├── vite.config.js    # Vite + @vitejs/plugin-react
-├── eslint.config.js  # flat ESLint config
-└── src/
-    ├── main.jsx      # app bootstrap (createRoot + <StrictMode>)
-    ├── App.jsx       # root component (currently the Vite starter)
-    ├── *.css         # component / global styles
-    └── assets/       # images & svgs
+frontend/src/
+├── main.jsx                    # bootstrap (createRoot + <StrictMode>)
+├── App.jsx                     # <BrowserRouter> + all <Route>s
+├── apiFetch.js                 # fetch wrapper: token-rotation interceptor (see below)
+├── Header.jsx                  # shared top bar (Pulse logo); optional Account menu via <Header account />
+├── LandingNav.jsx / Footer.jsx # landing-page chrome
+├── LandingPage.jsx             # marketing landing ("/")
+├── SignupPage.jsx  LoginPage.jsx  ForgotPasswordPage.jsx  ResetPasswordPage.jsx
+├── ChangePasswordPage.jsx  HomePage.jsx  VerifyEmailPage.jsx
+├── VerificationExpiredPage.jsx  VerificationInvalidPage.jsx  VerifiedAlreadyPage.jsx
+│   VerificationRequiredPage.jsx  ResetExpiredPage.jsx
+├── signup.css                  # THE design system (tokens + all shared classes)
+└── landing.css                 # landing-page layout (uses signup.css tokens)
 ```
+
+## Routes (`App.jsx`)
+
+| Path | Page |
+|------|------|
+| `/` | LandingPage |
+| `/signup` | SignupPage |
+| `/login` | LoginPage |
+| `/forgotPassword` | ForgotPasswordPage |
+| `/resetPassword/:token` | ResetPasswordPage |
+| `/reset-expired/:token` | ResetExpiredPage (resend reset link) |
+| `/home` | HomePage (auth'd; Account menu) |
+| `/verify/:token` | VerifyEmailPage (POSTs to backend, then routes by result) |
+| `/change-password` | ChangePasswordPage |
+| `/verification-expired/:token` · `/verification-invalid` · `/already-verified` · `/verification-required` | status pages |
 
 ## Conventions
 
-- Use function components and hooks; no class components.
-- Keep JSX files as `.jsx`.
-- Component files in `PascalCase` (e.g. `LoginForm.jsx`); hooks as `useXyz.js`.
-- Import assets through Vite (`import logo from './assets/x.svg'`), not absolute paths.
-- This is currently the default Vite scaffold — `App.jsx` still renders the starter page.
+- Function components + hooks only; files in `PascalCase.jsx`.
+- **Validation is backend-driven.** Pages generally submit as-is and render the backend's
+  errors (`422` field errors inline, other messages in a banner/toast) rather than replicating
+  rules client-side. Exceptions: a client-side **password-required** guard on login (an empty
+  password would burn a lockout attempt), and the signup password **policy checklist** (a live
+  UX hint mirroring `PASSWORD_RULES`).
+- Reuse `signup.css` classes (`.page`, `.card`, `.field`, `.input-row`, `.submit`, `.errlist`,
+  `.banner`, `.toast`, `.success`, `.alt-link`, `.policy`) and the shared `<Header>` — don't
+  invent parallel styles.
 
 ## Backend API integration
 
-The backend is an Express server (see `../backend`):
+- **Base URL:** `/pulse/users` (relative — the Vite proxy forwards `/pulse` → the backend).
+- **Auth = httpOnly cookies** (`accessToken`, `refreshToken`) set by the server — not
+  localStorage, not a bearer header. **Every** request must send `credentials: 'include'`.
+- **Email links point at the frontend.** Signup/resend/forgot send a **base URL** the backend
+  uses to build the emailed link, and the backend validates it against an allowlist:
+  - signup / `resend/:token` → `verifyBase: \`${window.location.origin}/verify\``
+  - forgot / `resetResend/:token` → `resetBase: \`${window.location.origin}/resetPassword\``
+  - (This is why the dev port is pinned to 5173 — it must match the backend allowlist.)
 
-- **Base URL:** `http://localhost:8000/pulse/users`
-- **Auth uses httpOnly cookies** (`accessToken`, `refreshToken`) set by the server —
-  **not** localStorage and **not** a bearer header. Because of this, every request that
-  needs auth (or that sets cookies) MUST send credentials:
+### Endpoints (see `../backend/openapi.yaml` for the full spec)
 
-  ```js
-  fetch("http://localhost:8000/pulse/users/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",            // REQUIRED — sends/receives the auth cookies
-    body: JSON.stringify({ email, password }),
-  })
-  ```
+| Method | Path | Body |
+|--------|------|------|
+| POST | `/signup` | `{ email, password, verifyBase }` |
+| POST | `/verifyEmail/:token` | — (called by `/verify` page; returns JSON, sets cookies) |
+| POST | `/resend/:token` | `{ verifyBase }` |
+| POST | `/login` | `{ email, password }` |
+| GET  | `/logout` | — (needs `accessToken`) |
+| POST | `/rotateToken` | — (needs `refreshToken`) |
+| POST | `/forgotPassword` | `{ email, resetBase }` |
+| POST | `/resetPassword/:token` | `{ email, newPassword, confirmPassword }` |
+| POST | `/resetResend/:token` | `{ resetBase }` |
+| POST | `/changePassword` | `{ oldPassword, newPassword, confirmPassword }` (needs `accessToken`) |
+| GET  | `/me` | — (needs `accessToken`; `data` is the email string) |
 
-### Endpoints
+### Response shapes
+- **Error:** `{ success: false, message, errors }`. `errors` is an array of `{ path, msg }` for
+  `422`; for `429` it's `{ retryAfter: <seconds> }`.
+- **Success:** `{ statuscode, data, message, sucess }` — note the flag is misspelled **`sucess`**.
+  Read HTTP status + `message`, not that flag.
 
-| Method | Path                      | Body / params                                   | Notes |
-|--------|---------------------------|-------------------------------------------------|-------|
-| POST   | `/signup`                 | `{ username, email, password }`                 | Sends verification email |
-| GET    | `/verifyEmail/:token`     | token in URL                                    | Server **redirects** the browser (see below) |
-| POST   | `/login`                  | `{ email, password }`                           | Sets auth cookies on success |
-| GET    | `/logout`                 | — (needs `accessToken` cookie)                  | Clears + blacklists token |
-| POST   | `/forgotPassword`         | `{ email }`                                     | Sends reset email |
-| POST   | `/resetPassword/:token`   | `{ newPassword, confirmPassword, email }`       | token in URL |
-| POST   | `/rotateToken`            | — (needs `refreshToken` cookie)                 | Issues new token pair |
-| POST   | `/changePassword`         | `{ oldPassword, newPassword, confirmPassword }` | Needs `accessToken` cookie |
+### Auth-flow patterns
+- **Verify email:** the emailed link opens the frontend `/verify/:token`; that page `POST`s to
+  `/verifyEmail/:token` and routes by result — `200`→`/home`, `401 expired`→`/verification-expired/:token`,
+  `401 used`→`/already-verified`, `403`→`/verification-invalid`. (Backend returns JSON, never redirects.)
+- **Reset expired:** on `401 expired/used` from the reset submit, navigate to `/reset-expired/:token`
+  (Resend button → `/resetResend/:token`).
+- **Login lockout:** account lock and IP limit come back as `401`/`429` with the wait time; the
+  UI shows the backend's time (converted to minutes). `401 "pls verify email"` → `/verification-required`.
 
-### Error & success response shape
+### Token rotation — `apiFetch.js`
+Authenticated calls (`/me`, `/changePassword`, `/logout`) go through **`apiFetch`**, a `fetch`
+wrapper that: on `401 "Token has expired"`, calls `POST /rotateToken` once (single-flight) and
+retries the original request; if rotation fails it returns the `401` so the page redirects to
+`/login`. Route new authenticated requests through `apiFetch`, not raw `fetch`.
 
-Errors come back as JSON from the backend's global error handler:
+### Password rules (backend `registerValidator`)
+Min 12 chars, ≥1 uppercase, ≥1 lowercase, ≥1 number, ≥1 special char, no spaces. (There is **no**
+username field — it was removed.)
 
-```json
-{ "success": false, "message": "Invalid credentials", "errors": [] }
-```
+## Dev proxy / Docker
+`vite.config.js` pins `port: 5173, strictPort: true` and proxies `/pulse` → the backend
+(`VITE_PROXY_TARGET`, default `http://localhost:8000`; set to `http://host.docker.internal:8000`
+in `docker-compose.yml`). `credentials: 'include'` is still required for cookie auth.
 
-`errors` is populated for validation failures (422). Success responses use a similar
-shape with `statuscode`, `data`, `message`, and `sucess` (note: the backend misspells
-the success flag as `sucess` — match that key when reading responses, or normalize it).
+## Design system (light theme — keep it consistent)
 
-### Password rules (mirror these in client-side validation)
+The app uses a **clean, light** theme defined by CSS variables in `signup.css` — reuse it; do
+**not** introduce a different design system or dark theme for new pages.
 
-Min 12 chars, at least one uppercase, one lowercase, one number, one special character,
-and no spaces. Username must be lowercase, min 3 chars.
+- **Tokens** (`:root` in `signup.css`): `--bg #f4f6f8`, `--card #fff`, `--text #1f2733`,
+  `--muted`, `--border`, `--accent #3b6ef0`, `--accent-soft`, `--error`, `--ok`.
+- **Type:** system font stack. **Shape:** ~9–14px radii, soft shadows.
+- **Motion:** subtle only (button spinners, small slide/lift). No animation overload.
+- **No glassmorphism** (not part of this design).
+- Reuse the shared `Header`, the `.card`/`.field`/`.submit`/`.toast`/`.banner` classes, and inline
+  SVGs for icons. New pages should look like the existing ones.
 
-## Routes this frontend must provide
-
-The backend redirects the browser to these **frontend** paths after email verification,
-using the `FRONTEND_URL` env var on the backend. Build pages/routes for:
-
-- `/home` — landing after successful verification
-- `/verification-invalid`
-- `/verification-expired`
-- `/already-verified`
-- plus a reset-password page that posts to `/resetPassword/:token`
-
-> If a verify link lands on `…/verifyEmail/undefined/home`, the backend's `FRONTEND_URL`
-> env var is unset — that's a backend `.env` fix, not a frontend bug.
-
-## Dev: avoiding CORS
-
-The backend does not currently enable CORS. Two options for local dev:
-
-1. **Vite proxy (recommended)** — add to `vite.config.js` so same-origin calls just work:
-   ```js
-   server: {
-     proxy: { "/pulse": { target: "http://localhost:8000", changeOrigin: true } },
-   }
-   ```
-   Then call `/pulse/users/login` (relative) instead of the full localhost:8000 URL.
-2. Or enable `cors({ origin: "http://localhost:5173", credentials: true })` on the backend.
-
-Either way, `credentials: "include"` is still required for the cookie auth to work.
-
-## Design aesthetics
-
-Avoid generic, "on distribution" output — the so-called "AI slop" aesthetic. Make
-creative, distinctive frontends that surprise and delight. Focus on:
-
-- **Typography:** Choose fonts that are beautiful, unique, and interesting. Avoid generic
-  fonts like Arial and Inter; opt for distinctive choices that elevate the aesthetic.
-- **Color & theme:** Commit to a cohesive aesthetic. Use CSS variables for consistency.
-  Dominant colors with sharp accents outperform timid, evenly-distributed palettes. Draw
-  from IDE themes and cultural aesthetics for inspiration.
-- **Motion:** Use animation for effects and micro-interactions. Prefer CSS-only solutions
-  for plain HTML; use the Motion library for React when available. Prioritize high-impact
-  moments — one well-orchestrated page load with staggered reveals (`animation-delay`)
-  creates more delight than scattered micro-interactions.
-- **Backgrounds:** Create atmosphere and depth rather than defaulting to solid colors.
-  Layer CSS gradients, use geometric patterns, or add contextual effects that match the
-  overall aesthetic.
-
-Avoid generic AI-generated aesthetics:
-
-- Overused font families (Inter, Roboto, Arial, system fonts)
-- Clichéd color schemes (particularly purple gradients on white backgrounds)
-- Predictable layouts and component patterns
-- Cookie-cutter design that lacks context-specific character
-
-Interpret creatively and make unexpected choices that feel genuinely designed for the
-context. Vary between light and dark themes, different fonts, and different aesthetics.
-There's a tendency to converge on common choices (e.g. Space Grotesk) across generations —
-avoid this. It is critical to think outside the box.
+## AI-assisted docs
+Feature plans/specs live in `frontend/AI_DOCS/*.md` (one file per feature). When adding/changing
+a feature, keep its doc in sync.
