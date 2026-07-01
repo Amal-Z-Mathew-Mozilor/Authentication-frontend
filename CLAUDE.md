@@ -91,6 +91,7 @@ frontend/src/
 | GET  | `/logout` | — (needs `accessToken`) |
 | POST | `/rotateToken` | — (needs `refreshToken`) |
 | POST | `/forgotPassword` | `{ email, resetBase }` |
+| GET  | `/resetPassword/:token/check` | — (read-only token pre-check; `200`=valid, `401`/`403` otherwise) |
 | POST | `/resetPassword/:token` | `{ email, newPassword, confirmPassword }` |
 | POST | `/resetResend/:token` | `{ resetBase }` |
 | POST | `/changePassword` | `{ oldPassword, newPassword, confirmPassword }` (needs `accessToken`) |
@@ -106,8 +107,11 @@ frontend/src/
 - **Verify email:** the emailed link opens the frontend `/verify/:token`; that page `POST`s to
   `/verifyEmail/:token` and routes by result — `200`→`/home`, `401 expired`→`/verification-expired/:token`,
   `401 used`→`/already-verified`, `403`→`/verification-invalid`. (Backend returns JSON, never redirects.)
-- **Reset expired:** on `401 expired/used` from the reset submit, navigate to `/reset-expired/:token`
-  (Resend button → `/resetResend/:token`).
+- **Reset password:** `ResetPasswordPage` validates the token **on mount** via
+  `GET /resetPassword/:token/check` before rendering the form — `200`→show form, `401 expired/used`
+  →`/reset-expired/:token` (with `state.reason`), `403`→inline "invalid link" state, network error
+  →inline "couldn't verify" state. The submit still re-checks the token (defense-in-depth): on
+  `401 expired/used` it navigates to `/reset-expired/:token` (Resend button → `/resetResend/:token`).
 - **Login lockout:** account lock and IP limit come back as `401`/`429` with the wait time; the
   UI shows the backend's time (converted to minutes). `401 "pls verify email"` → `/verification-required`.
 
