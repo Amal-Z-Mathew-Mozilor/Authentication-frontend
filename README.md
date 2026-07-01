@@ -1,16 +1,56 @@
-# React + Vite
+# Pulse — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React client for the Pulse authentication app: **React 19** + **Vite 8**, plain JSX (no
+TypeScript), routed with `react-router-dom`. It talks to the Pulse backend (`../backend`, a
+separate repo) through a dev proxy and cookie-based auth.
 
-Currently, two official plugins are available:
+> Contributor notes (design system, routes, API integration) are in [`CLAUDE.md`](./CLAUDE.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Prerequisites
 
-## React Compiler
+- The **backend must be running on `http://localhost:8000`** (see the backend repo's README).
+  The dev server proxies `/pulse` → the backend, and auth relies on its httpOnly cookies.
+- **Docker** + **Docker Compose** (recommended), **or** **Node.js 22+** to run on the host.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Run with Docker (recommended)
 
-## Expanding the ESLint configuration
+```bash
+docker compose up
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+This uses [`docker-compose.yml`](./docker-compose.yml): it installs dependencies **inside** the
+container (your host stays clean) and serves the Vite dev server at **http://localhost:5173** with
+hot reload. Because the backend runs on the host, the container reaches it via
+`host.docker.internal:8000` (already configured as `VITE_PROXY_TARGET`).
+
+Stop with `Ctrl-C`; add `-d` to run detached.
+
+## Run on the host (without Docker)
+
+```bash
+npm install
+npm run dev        # Vite dev server → http://localhost:5173
+```
+
+To point at a backend somewhere other than `localhost:8000`:
+
+```bash
+VITE_PROXY_TARGET=http://your-backend:8000 npm run dev
+```
+
+## Scripts
+
+```bash
+npm run dev        # start the dev server (pinned to :5173, strictPort)
+npm run build      # production build → dist/
+npm run preview    # serve the production build locally
+npm run lint       # ESLint
+```
+
+## Notes
+
+- **The dev port is pinned to `5173`.** The backend allowlists email-link bases against this exact
+  origin (`http://localhost:5173/...`), so verification and password-reset links only work on 5173.
+- No `.env` is required for local dev — the only knob is `VITE_PROXY_TARGET` (defaults to
+  `http://localhost:8000`).
+- All API calls are relative to `/pulse` and send `credentials: 'include'` for cookie auth.
