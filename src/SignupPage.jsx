@@ -72,8 +72,8 @@ export default function SignupPage() {
         return
       }
 
-      // 400 "email already exist" — show a toast, keep the form intact
-      if (res.status === 400 && /email/i.test(data.message || '')) {
+      // 409 "email already exist" — show a toast, keep the form intact
+      if (res.status === 409 && /email/i.test(data.message || '')) {
         setToast({ message: data.message || 'Email already exists.' })
         setStatus('idle')
         return

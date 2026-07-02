@@ -85,8 +85,8 @@ export default function LoginPage() {
         return
       }
 
-      // 401 unverified email — go to the verification notification page
-      if (res.status === 401 && /verify/i.test(data.message || '')) {
+      // 403 unverified email — go to the verification notification page
+      if (res.status === 403 && /verify/i.test(data.message || '')) {
         navigate('/verification-required')
         return
       }
