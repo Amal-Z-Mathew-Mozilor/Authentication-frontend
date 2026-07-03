@@ -14,15 +14,6 @@ function formatMinutes(seconds) {
   return `${m} minute${m === 1 ? '' : 's'}`
 }
 
-// The account-lock 401 message embeds the remaining seconds — rewrite it in minutes.
-function humanizeLock(message) {
-  if (!message) return 'Login failed.'
-  if (!/lock/i.test(message)) return message
-  const match = message.match(/(\d+)/)
-  if (!match) return message
-  return `Account is locked. Try again in ${formatMinutes(match[1])}.`
-}
-
 export default function LoginPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
@@ -75,12 +66,12 @@ export default function LoginPage() {
         return
       }
 
-      // 429 — IP rate limit; retry time comes from the backend (seconds → minutes)
+      // 429 — throttled: account lock OR per-IP limit. Both send errors.retryAfter (seconds).
+      // Pick the wording from the backend message so a locked account reads as "Account is locked".
       if (res.status === 429) {
         const secs = data.errors?.retryAfter
-        setBanner(secs != null
-          ? `Too many login attempts. Try again in ${formatMinutes(secs)}.`
-          : (data.message || 'Too many login attempts.'))
+        const lead = /lock/i.test(data.message || '') ? 'Account is locked.' : 'Too many login attempts.'
+        setBanner(secs != null ? `${lead} Try again in ${formatMinutes(secs)}.` : (data.message || lead))
         setStatus('idle')
         return
       }
@@ -91,8 +82,8 @@ export default function LoginPage() {
         return
       }
 
-      // 401 etc — backend message; account-lock time is rewritten in minutes
-      setBanner(humanizeLock(data.message))
+      // 401 etc — invalid credentials or other backend message
+      setBanner(data.message || 'Login failed.')
       setStatus('idle')
     } catch {
       setBanner('Could not reach the server. Is the backend running on :8000?')
