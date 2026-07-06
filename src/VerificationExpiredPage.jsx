@@ -5,7 +5,7 @@ import './signup.css'
 
 export default function VerificationExpiredPage() {
   const { token } = useParams()
-  const [status, setStatus] = useState('idle')   // idle | sending | sent
+  const [status, setStatus] = useState('idle') // idle | sending | sent
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -22,11 +22,17 @@ export default function VerificationExpiredPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ verifyBase: `${window.location.origin}/verify` }),
+        body: JSON.stringify({
+          verifyBase: `${window.location.origin}/verify`,
+        }),
       })
 
       let data = {}
-      try { data = await res.json() } catch { /* keep {} */ }
+      try {
+        data = await res.json()
+      } catch {
+        /* keep {} */
+      }
 
       if (res.ok) {
         setStatus('sent')
@@ -34,10 +40,14 @@ export default function VerificationExpiredPage() {
       }
 
       // 400 — invalid token / already verified, etc.
-      setToast({ message: data.message || 'Could not resend the verification email.' })
+      setToast({
+        message: data.message || 'Could not resend the verification email.',
+      })
       setStatus('idle')
     } catch {
-      setToast({ message: 'Could not reach the server. Is the backend running on :8000?' })
+      setToast({
+        message: 'Could not reach the server. Is the backend running on :8000?',
+      })
       setStatus('idle')
     }
   }

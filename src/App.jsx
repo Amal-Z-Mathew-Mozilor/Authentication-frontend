@@ -27,9 +27,18 @@ function App() {
         <Route path="/verify/:token" element={<VerifyEmailPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/already-verified" element={<VerifiedAlreadyPage />} />
-        <Route path="/verification-expired/:token" element={<VerificationExpiredPage />} />
-        <Route path="/verification-invalid" element={<VerificationInvalidPage />} />
-        <Route path="/verification-required" element={<VerificationRequiredPage />} />
+        <Route
+          path="/verification-expired/:token"
+          element={<VerificationExpiredPage />}
+        />
+        <Route
+          path="/verification-invalid"
+          element={<VerificationInvalidPage />}
+        />
+        <Route
+          path="/verification-required"
+          element={<VerificationRequiredPage />}
+        />
       </Routes>
     </BrowserRouter>
   )

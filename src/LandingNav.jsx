@@ -24,16 +24,30 @@ export default function LandingNav() {
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
         >
-          <span /><span /><span />
+          <span />
+          <span />
+          <span />
         </button>
 
         <nav className={`lnav-links ${open ? 'open' : ''}`}>
-          <a href="#top" onClick={close}>Home</a>
-          <a href="#features" onClick={close}>Features</a>
-          <a href="#about" onClick={close}>About</a>
-          <a href="#contact" onClick={close}>Contact</a>
-          <Link to="/login" className="lnav-signin" onClick={close}>Sign In</Link>
-          <Link to="/signup" className="lnav-signup" onClick={close}>Sign Up</Link>
+          <a href="#top" onClick={close}>
+            Home
+          </a>
+          <a href="#features" onClick={close}>
+            Features
+          </a>
+          <a href="#about" onClick={close}>
+            About
+          </a>
+          <a href="#contact" onClick={close}>
+            Contact
+          </a>
+          <Link to="/login" className="lnav-signin" onClick={close}>
+            Sign In
+          </Link>
+          <Link to="/signup" className="lnav-signup" onClick={close}>
+            Sign Up
+          </Link>
         </nav>
       </div>
     </header>

@@ -1,23 +1,23 @@
 :root {
   /* Midnight Clinic / Ember Pulse */
-  --ink:        #0a0d10;
-  --ink-2:      #0d1217;
-  --panel:      rgba(17, 23, 29, 0.66);
+  --ink: #0a0d10;
+  --ink-2: #0d1217;
+  --panel: rgba(17, 23, 29, 0.66);
   --panel-edge: rgba(255, 255, 255, 0.07);
-  --paper:      #f1e9dc;
-  --muted:      #8a97a1;
-  --faint:      #5b6670;
+  --paper: #f1e9dc;
+  --muted: #8a97a1;
+  --faint: #5b6670;
 
-  --ember:      #ff5a36;
-  --ember-2:    #ff8a4c;
+  --ember: #ff5a36;
+  --ember-2: #ff8a4c;
   --ember-soft: rgba(255, 90, 54, 0.13);
-  --mint:       #74efb6;
-  --error:      #ff7a6b;
-  --error-soft: rgba(255, 122, 107, 0.10);
+  --mint: #74efb6;
+  --error: #ff7a6b;
+  --error-soft: rgba(255, 122, 107, 0.1);
 
   --display: 'Fraunces', Georgia, serif;
-  --sans:    'IBM Plex Sans', system-ui, sans-serif;
-  --mono:    'IBM Plex Mono', ui-monospace, monospace;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   color-scheme: dark;
   font-synthesis: none;
@@ -26,9 +26,15 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body, #root { height: 100%; }
+html,
+body,
+#root {
+  height: 100%;
+}
 
 body {
   margin: 0;
@@ -37,8 +43,16 @@ body {
   background-color: var(--ink);
   /* layered atmosphere: warm ember glow top-right, cold teal pool bottom-left */
   background-image:
-    radial-gradient(120% 90% at 92% -10%, rgba(255, 90, 54, 0.16), transparent 55%),
-    radial-gradient(90% 80% at 8% 110%, rgba(46, 120, 130, 0.18), transparent 50%),
+    radial-gradient(
+      120% 90% at 92% -10%,
+      rgba(255, 90, 54, 0.16),
+      transparent 55%
+    ),
+    radial-gradient(
+      90% 80% at 8% 110%,
+      rgba(46, 120, 130, 0.18),
+      transparent 50%
+    ),
     linear-gradient(180deg, #0a0d10 0%, #0c1116 100%);
   background-attachment: fixed;
   min-height: 100svh;
@@ -47,7 +61,7 @@ body {
 
 /* faint clinical grid overlay */
 body::before {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;

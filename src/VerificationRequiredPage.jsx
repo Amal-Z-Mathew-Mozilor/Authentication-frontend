@@ -12,7 +12,10 @@ export default function VerificationRequiredPage() {
         <div className="card success">
           <div className="check warn">✉</div>
           <h2>Verify your email</h2>
-          <p>Your email isn't verified yet. Please check your inbox for the verification link.</p>
+          <p>
+            Your email isn't verified yet. Please check your inbox for the
+            verification link.
+          </p>
           <button
             type="button"
             className="submit resend-btn"

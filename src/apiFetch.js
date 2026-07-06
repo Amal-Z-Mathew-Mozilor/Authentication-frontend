@@ -15,10 +15,15 @@ let refreshPromise = null
 
 function rotateOnce() {
   if (!refreshPromise) {
-    refreshPromise = fetch(ROTATE_URL, { method: 'POST', credentials: 'include' })
+    refreshPromise = fetch(ROTATE_URL, {
+      method: 'POST',
+      credentials: 'include',
+    })
       .then((res) => res.ok)
       .catch(() => false)
-      .finally(() => { refreshPromise = null })
+      .finally(() => {
+        refreshPromise = null
+      })
   }
   return refreshPromise
 }
@@ -52,7 +57,7 @@ export async function apiFetch(url, options = {}) {
   if (res.status === 401 && (await isExpired(res))) {
     const refreshed = await rotateOnce()
     if (refreshed) {
-      res = await fetch(url, opts)   // retry once with the refreshed cookie
+      res = await fetch(url, opts) // retry once with the refreshed cookie
     } else {
       // rotation failed (session dead — e.g. refresh rejected by the cutoff) → client logout
       window.location.href = LOGIN_PATH

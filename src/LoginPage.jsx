@@ -18,8 +18,8 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({ email: [], password: [] })
-  const [banner, setBanner] = useState(null)      // auth/lock/rate-limit message from backend
-  const [status, setStatus] = useState('idle')    // idle | loading
+  const [banner, setBanner] = useState(null) // auth/lock/rate-limit message from backend
+  const [status, setStatus] = useState('idle') // idle | loading
   const [showPw, setShowPw] = useState(false)
 
   const update = (key) => (e) => {
@@ -52,7 +52,11 @@ export default function LoginPage() {
       })
 
       let data = {}
-      try { data = await res.json() } catch { /* keep {} */ }
+      try {
+        data = await res.json()
+      } catch {
+        /* keep {} */
+      }
 
       if (res.ok) {
         navigate('/home')
@@ -61,7 +65,12 @@ export default function LoginPage() {
 
       // 422 — email validation from loginMiddleware
       if (res.status === 422 && Array.isArray(data.errors)) {
-        setErrors({ email: data.errors.filter((er) => er.path === 'email').map((er) => er.msg), password: [] })
+        setErrors({
+          email: data.errors
+            .filter((er) => er.path === 'email')
+            .map((er) => er.msg),
+          password: [],
+        })
         setStatus('idle')
         return
       }
@@ -70,8 +79,14 @@ export default function LoginPage() {
       // Pick the wording from the backend message so a locked account reads as "Account is locked".
       if (res.status === 429) {
         const secs = data.errors?.retryAfter
-        const lead = /lock/i.test(data.message || '') ? 'Account is locked.' : 'Too many login attempts.'
-        setBanner(secs != null ? `${lead} Try again in ${formatMinutes(secs)}.` : (data.message || lead))
+        const lead = /lock/i.test(data.message || '')
+          ? 'Account is locked.'
+          : 'Too many login attempts.'
+        setBanner(
+          secs != null
+            ? `${lead} Try again in ${formatMinutes(secs)}.`
+            : data.message || lead,
+        )
         setStatus('idle')
         return
       }
@@ -97,9 +112,15 @@ export default function LoginPage() {
       <main className="main">
         <div className="card">
           <h1 className="title">Sign in</h1>
-          <p className="subtitle">New here? <Link to="/signup">Create an account</Link></p>
+          <p className="subtitle">
+            New here? <Link to="/signup">Create an account</Link>
+          </p>
 
-          {banner && <div className="banner" role="alert">{banner}</div>}
+          {banner && (
+            <div className="banner" role="alert">
+              {banner}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} noValidate>
             <Field
@@ -116,7 +137,12 @@ export default function LoginPage() {
             <div className={`field ${errors.password.length ? 'invalid' : ''}`}>
               <label className="label" htmlFor="password">
                 <span>Password</span>
-                <button type="button" className="peek" onClick={() => setShowPw((s) => !s)} tabIndex={-1}>
+                <button
+                  type="button"
+                  className="peek"
+                  onClick={() => setShowPw((s) => !s)}
+                  tabIndex={-1}
+                >
                   {showPw ? 'hide' : 'show'}
                 </button>
               </label>
@@ -132,7 +158,9 @@ export default function LoginPage() {
               </div>
               {errors.password.length > 0 && (
                 <ul className="errlist">
-                  {errors.password.map((msg, i) => <li key={i}>{msg}</li>)}
+                  {errors.password.map((msg, i) => (
+                    <li key={i}>{msg}</li>
+                  ))}
                 </ul>
               )}
             </div>
@@ -146,7 +174,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="alt-link"><Link to="/forgotPassword">Forgot your password?</Link></p>
+          <p className="alt-link">
+            <Link to="/forgotPassword">Forgot your password?</Link>
+          </p>
         </div>
       </main>
     </div>
@@ -156,13 +186,17 @@ export default function LoginPage() {
 function Field({ id, label, errors = [], ...props }) {
   return (
     <div className={`field ${errors.length ? 'invalid' : ''}`}>
-      <label className="label" htmlFor={id}><span>{label}</span></label>
+      <label className="label" htmlFor={id}>
+        <span>{label}</span>
+      </label>
       <div className="input-row">
         <input id={id} {...props} />
       </div>
       {errors.length > 0 && (
         <ul className="errlist">
-          {errors.map((msg, i) => <li key={i}>{msg}</li>)}
+          {errors.map((msg, i) => (
+            <li key={i}>{msg}</li>
+          ))}
         </ul>
       )}
     </div>

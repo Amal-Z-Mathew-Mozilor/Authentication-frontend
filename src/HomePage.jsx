@@ -9,7 +9,7 @@ const ME_URL = '/pulse/users/me'
 export default function HomePage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState('loading')   // loading | ready | error
+  const [status, setStatus] = useState('loading') // loading | ready | error
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -26,29 +26,40 @@ export default function HomePage() {
         }
 
         let data = {}
-        try { data = await res.json() } catch { /* keep {} */ }
+        try {
+          data = await res.json()
+        } catch {
+          /* keep {} */
+        }
 
         if (!active) return
 
         if (res.ok) {
           // /me returns the email as `data` (string); tolerate an object too
-          const value = typeof data.data === 'string' ? data.data : data.data?.email
+          const value =
+            typeof data.data === 'string' ? data.data : data.data?.email
           setEmail(value || '')
           setStatus('ready')
           return
         }
 
         setStatus('error')
+
         setToast({ message: data.message || 'Could not load your account.' })
       } catch {
         if (!active) return
         setStatus('error')
-        setToast({ message: 'Could not reach the server. Is the backend running on :8000?' })
+        setToast({
+          message:
+            'Could not reach the server. Is the backend running on :8000?',
+        })
       }
     }
 
     loadUser()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [navigate])
 
   return (

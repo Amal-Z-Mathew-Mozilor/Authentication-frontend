@@ -39,7 +39,9 @@ function AccountMenu() {
     try {
       // POST /logout clears the auth cookies + blacklists the token (needs the accessToken cookie)
       await apiFetch('/pulse/users/logout', { method: 'POST' })
-    } catch { /* ignore — redirect to the landing page regardless */ }
+    } catch {
+      /* ignore — redirect to the landing page regardless */
+    }
     navigate('/')
   }
 
@@ -60,7 +62,10 @@ function AccountMenu() {
           <button
             type="button"
             role="menuitem"
-            onClick={() => { setOpen(false); navigate('/change-password') }}
+            onClick={() => {
+              setOpen(false)
+              navigate('/change-password')
+            }}
           >
             Change password
           </button>

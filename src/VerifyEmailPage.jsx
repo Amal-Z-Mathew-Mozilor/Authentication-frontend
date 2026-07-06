@@ -7,7 +7,7 @@ export default function VerifyEmailPage() {
   const { token } = useParams()
   const navigate = useNavigate()
   const [error, setError] = useState(null)
-  const ran = useRef(false)   // guard against StrictMode double-invoke (would 'use up' the token twice)
+  const ran = useRef(false) // guard against StrictMode double-invoke (would 'use up' the token twice)
 
   useEffect(() => {
     if (ran.current) return
@@ -21,14 +21,30 @@ export default function VerifyEmailPage() {
         })
 
         let data = {}
-        try { data = await res.json() } catch { /* keep {} */ }
+        try {
+          data = await res.json()
+        } catch {
+          /* keep {} */
+        }
 
-        if (res.ok) { navigate('/home'); return }
+        if (res.ok) {
+          navigate('/home')
+          return
+        }
 
         const msg = data.message || ''
-        if (res.status === 401 && /expired/i.test(msg)) { navigate(`/verification-expired/${token}`); return }
-        if (res.status === 401 && /used/i.test(msg)) { navigate('/already-verified'); return }
-        if (res.status === 403) { navigate('/verification-invalid'); return }
+        if (res.status === 401 && /expired/i.test(msg)) {
+          navigate(`/verification-expired/${token}`)
+          return
+        }
+        if (res.status === 401 && /used/i.test(msg)) {
+          navigate('/already-verified')
+          return
+        }
+        if (res.status === 403) {
+          navigate('/verification-invalid')
+          return
+        }
 
         setError(msg || 'Could not verify your email.')
       } catch {
@@ -47,7 +63,9 @@ export default function VerifyEmailPage() {
           {!error ? (
             <>
               <h2>Verifying…</h2>
-              <p className="subtitle">Please wait while we verify your email.</p>
+              <p className="subtitle">
+                Please wait while we verify your email.
+              </p>
             </>
           ) : (
             <>

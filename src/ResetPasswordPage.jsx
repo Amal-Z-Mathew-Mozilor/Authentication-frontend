@@ -8,20 +8,26 @@ const EMPTY_ERRORS = { email: [], newPassword: [], confirmPassword: [] }
 export default function ResetPasswordPage() {
   const { token } = useParams()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ email: '', newPassword: '', confirmPassword: '' })
-  const [errors, setErrors] = useState(EMPTY_ERRORS)   // 422 field errors
-  const [banner, setBanner] = useState(null)           // 400/401/403 message from backend
+  const [form, setForm] = useState({
+    email: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [errors, setErrors] = useState(EMPTY_ERRORS) // 422 field errors
+  const [banner, setBanner] = useState(null) // 400/401/403 message from backend
   // checking → validating token on load · ok → show form · loading → submitting ·
   // done → password updated · invalid → bad link · checkError → couldn't reach server
   const [status, setStatus] = useState('checking')
-  const [show, setShow] = useState({ newPassword: false, confirmPassword: false })
-  const checked = useRef(false)   // guard StrictMode's double-mount
+  const [show, setShow] = useState({
+    newPassword: false,
+    confirmPassword: false,
+  })
+  const checked = useRef(false) // guard StrictMode's double-mount
 
   // Validate the reset token BEFORE showing the form (read-only check — token not consumed).
   useEffect(() => {
     if (checked.current) return
     checked.current = true
-
     ;(async () => {
       try {
         const res = await fetch(`/pulse/users/resetPassword/${token}/check`, {
@@ -35,12 +41,19 @@ export default function ResetPasswordPage() {
         }
 
         let data = {}
-        try { data = await res.json() } catch { /* keep {} */ }
+        try {
+          data = await res.json()
+        } catch {
+          /* keep {} */
+        }
 
         // Expired / already-used → resend page (resend still works); pass the reason for wording.
         if (res.status === 401 && /(expired|used)/i.test(data.message || '')) {
           const reason = /used/i.test(data.message) ? 'used' : 'expired'
-          navigate(`/reset-expired/${token}`, { state: { reason }, replace: true })
+          navigate(`/reset-expired/${token}`, {
+            state: { reason },
+            replace: true,
+          })
           return
         }
 
@@ -76,7 +89,11 @@ export default function ResetPasswordPage() {
       })
 
       let data = {}
-      try { data = await res.json() } catch { /* keep {} */ }
+      try {
+        data = await res.json()
+      } catch {
+        /* keep {} */
+      }
 
       if (res.ok) {
         setStatus('done')
@@ -134,8 +151,12 @@ export default function ResetPasswordPage() {
           <div className="card success">
             <div className="check warn">!</div>
             <h2>Invalid reset link</h2>
-            <p>This password reset link isn’t valid. Please request a new one.</p>
-            <p className="alt-link"><Link to="/forgotPassword">Request a new link</Link></p>
+            <p>
+              This password reset link isn’t valid. Please request a new one.
+            </p>
+            <p className="alt-link">
+              <Link to="/forgotPassword">Request a new link</Link>
+            </p>
           </div>
         </main>
       </div>
@@ -151,7 +172,9 @@ export default function ResetPasswordPage() {
             <div className="check warn">!</div>
             <h2>Couldn’t verify your link</h2>
             <p>Could not reach the server. Is the backend running on :8000?</p>
-            <p className="alt-link"><Link to="/forgotPassword">Back to Forgot password</Link></p>
+            <p className="alt-link">
+              <Link to="/forgotPassword">Back to Forgot password</Link>
+            </p>
           </div>
         </main>
       </div>
@@ -167,7 +190,9 @@ export default function ResetPasswordPage() {
             <div className="check">✓</div>
             <h2>Password updated</h2>
             <p>You can now sign in with your new password.</p>
-            <p className="alt-link"><Link to="/login">Back to login</Link></p>
+            <p className="alt-link">
+              <Link to="/login">Back to login</Link>
+            </p>
           </div>
         </main>
       </div>
@@ -180,14 +205,22 @@ export default function ResetPasswordPage() {
       <main className="main">
         <div className="card">
           <h1 className="title">Reset your password</h1>
-          <p className="subtitle">Enter your email and choose a new password.</p>
+          <p className="subtitle">
+            Enter your email and choose a new password.
+          </p>
 
-          {banner && <div className="banner" role="alert">{banner}</div>}
+          {banner && (
+            <div className="banner" role="alert">
+              {banner}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} noValidate>
             {/* 1. Email */}
             <div className={`field ${errors.email.length ? 'invalid' : ''}`}>
-              <label className="label" htmlFor="email"><span>Email</span></label>
+              <label className="label" htmlFor="email">
+                <span>Email</span>
+              </label>
               <div className="input-row">
                 <input
                   id="email"
@@ -199,15 +232,26 @@ export default function ResetPasswordPage() {
                 />
               </div>
               {errors.email.length > 0 && (
-                <ul className="errlist">{errors.email.map((m, i) => <li key={i}>{m}</li>)}</ul>
+                <ul className="errlist">
+                  {errors.email.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
               )}
             </div>
 
             {/* 2. New password */}
-            <div className={`field ${errors.newPassword.length ? 'invalid' : ''}`}>
+            <div
+              className={`field ${errors.newPassword.length ? 'invalid' : ''}`}
+            >
               <label className="label" htmlFor="newPassword">
                 <span>New password</span>
-                <button type="button" className="peek" onClick={toggle('newPassword')} tabIndex={-1}>
+                <button
+                  type="button"
+                  className="peek"
+                  onClick={toggle('newPassword')}
+                  tabIndex={-1}
+                >
                   {show.newPassword ? 'hide' : 'show'}
                 </button>
               </label>
@@ -222,15 +266,26 @@ export default function ResetPasswordPage() {
                 />
               </div>
               {errors.newPassword.length > 0 && (
-                <ul className="errlist">{errors.newPassword.map((m, i) => <li key={i}>{m}</li>)}</ul>
+                <ul className="errlist">
+                  {errors.newPassword.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
               )}
             </div>
 
             {/* 3. Confirm password */}
-            <div className={`field ${errors.confirmPassword.length ? 'invalid' : ''}`}>
+            <div
+              className={`field ${errors.confirmPassword.length ? 'invalid' : ''}`}
+            >
               <label className="label" htmlFor="confirmPassword">
                 <span>Confirm password</span>
-                <button type="button" className="peek" onClick={toggle('confirmPassword')} tabIndex={-1}>
+                <button
+                  type="button"
+                  className="peek"
+                  onClick={toggle('confirmPassword')}
+                  tabIndex={-1}
+                >
                   {show.confirmPassword ? 'hide' : 'show'}
                 </button>
               </label>
@@ -245,7 +300,11 @@ export default function ResetPasswordPage() {
                 />
               </div>
               {errors.confirmPassword.length > 0 && (
-                <ul className="errlist">{errors.confirmPassword.map((m, i) => <li key={i}>{m}</li>)}</ul>
+                <ul className="errlist">
+                  {errors.confirmPassword.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
               )}
             </div>
 
@@ -258,7 +317,9 @@ export default function ResetPasswordPage() {
             </button>
           </form>
 
-          <p className="alt-link"><Link to="/login">Back to login</Link></p>
+          <p className="alt-link">
+            <Link to="/login">Back to login</Link>
+          </p>
         </div>
       </main>
     </div>

@@ -9,7 +9,10 @@ export default function VerificationInvalidPage() {
         <div className="card success">
           <div className="check bad">!</div>
           <h2>Invalid verification link</h2>
-          <p>This verification link isn't valid. Please sign up again to receive a new one.</p>
+          <p>
+            This verification link isn't valid. Please sign up again to receive
+            a new one.
+          </p>
         </div>
       </main>
     </div>

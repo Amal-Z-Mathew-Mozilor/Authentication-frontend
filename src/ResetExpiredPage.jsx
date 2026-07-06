@@ -6,8 +6,8 @@ import './signup.css'
 export default function ResetExpiredPage() {
   const { token } = useParams()
   const { state } = useLocation()
-  const used = state?.reason === 'used'   // used vs expired → different wording (resend works either way)
-  const [status, setStatus] = useState('idle')   // idle | sending | sent
+  const used = state?.reason === 'used' // used vs expired → different wording (resend works either way)
+  const [status, setStatus] = useState('idle') // idle | sending | sent
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -24,11 +24,17 @@ export default function ResetExpiredPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ resetBase: `${window.location.origin}/resetPassword` }),
+        body: JSON.stringify({
+          resetBase: `${window.location.origin}/resetPassword`,
+        }),
       })
 
       let data = {}
-      try { data = await res.json() } catch { /* keep {} */ }
+      try {
+        data = await res.json()
+      } catch {
+        /* keep {} */
+      }
 
       if (res.ok) {
         setStatus('sent')
@@ -38,7 +44,9 @@ export default function ResetExpiredPage() {
       setToast({ message: data.message || 'Could not resend the reset email.' })
       setStatus('idle')
     } catch {
-      setToast({ message: 'Could not reach the server. Is the backend running on :8000?' })
+      setToast({
+        message: 'Could not reach the server. Is the backend running on :8000?',
+      })
       setStatus('idle')
     }
   }

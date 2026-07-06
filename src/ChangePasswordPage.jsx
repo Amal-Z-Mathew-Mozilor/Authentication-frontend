@@ -8,11 +8,19 @@ const EMPTY_ERRORS = { oldPassword: [], newPassword: [], confirmPassword: [] }
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' })
-  const [errors, setErrors] = useState(EMPTY_ERRORS)   // 422 field errors
-  const [banner, setBanner] = useState(null)           // 400 message from backend
-  const [status, setStatus] = useState('idle')         // idle | loading | done
-  const [show, setShow] = useState({ oldPassword: false, newPassword: false, confirmPassword: false })
+  const [form, setForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [errors, setErrors] = useState(EMPTY_ERRORS) // 422 field errors
+  const [banner, setBanner] = useState(null) // 400 message from backend
+  const [status, setStatus] = useState('idle') // idle | loading | done
+  const [show, setShow] = useState({
+    oldPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  })
 
   const toggle = (key) => () => setShow((s) => ({ ...s, [key]: !s[key] }))
 
@@ -44,7 +52,11 @@ export default function ChangePasswordPage() {
       })
 
       let data = {}
-      try { data = await res.json() } catch { /* keep {} */ }
+      try {
+        data = await res.json()
+      } catch {
+        /* keep {} */
+      }
 
       if (res.ok) {
         setStatus('done')
@@ -59,7 +71,11 @@ export default function ChangePasswordPage() {
 
       // 422 — changePasswordValidator: group messages by field
       if (res.status === 422 && Array.isArray(data.errors)) {
-        const grouped = { oldPassword: [], newPassword: [], confirmPassword: [] }
+        const grouped = {
+          oldPassword: [],
+          newPassword: [],
+          confirmPassword: [],
+        }
         for (const er of data.errors) {
           if (grouped[er.path]) grouped[er.path].push(er.msg)
         }
@@ -85,8 +101,13 @@ export default function ChangePasswordPage() {
           <div className="card success">
             <div className="check">✓</div>
             <h2>Password changed</h2>
-            <p>For your security, you've been signed out on all devices. Redirecting to login…</p>
-            <p className="alt-link"><Link to="/login">Go to login now</Link></p>
+            <p>
+              For your security, you've been signed out on all devices.
+              Redirecting to login…
+            </p>
+            <p className="alt-link">
+              <Link to="/login">Go to login now</Link>
+            </p>
           </div>
         </main>
       </div>
@@ -99,16 +120,29 @@ export default function ChangePasswordPage() {
       <main className="main">
         <div className="card">
           <h1 className="title">Change password</h1>
-          <p className="subtitle">Enter your current password and choose a new one.</p>
+          <p className="subtitle">
+            Enter your current password and choose a new one.
+          </p>
 
-          {banner && <div className="banner" role="alert">{banner}</div>}
+          {banner && (
+            <div className="banner" role="alert">
+              {banner}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} noValidate>
             {/* 1. Old password */}
-            <div className={`field ${errors.oldPassword.length ? 'invalid' : ''}`}>
+            <div
+              className={`field ${errors.oldPassword.length ? 'invalid' : ''}`}
+            >
               <label className="label" htmlFor="oldPassword">
                 <span>Current password</span>
-                <button type="button" className="peek" onClick={toggle('oldPassword')} tabIndex={-1}>
+                <button
+                  type="button"
+                  className="peek"
+                  onClick={toggle('oldPassword')}
+                  tabIndex={-1}
+                >
                   {show.oldPassword ? 'hide' : 'show'}
                 </button>
               </label>
@@ -123,15 +157,26 @@ export default function ChangePasswordPage() {
                 />
               </div>
               {errors.oldPassword.length > 0 && (
-                <ul className="errlist">{errors.oldPassword.map((m, i) => <li key={i}>{m}</li>)}</ul>
+                <ul className="errlist">
+                  {errors.oldPassword.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
               )}
             </div>
 
             {/* 2. New password */}
-            <div className={`field ${errors.newPassword.length ? 'invalid' : ''}`}>
+            <div
+              className={`field ${errors.newPassword.length ? 'invalid' : ''}`}
+            >
               <label className="label" htmlFor="newPassword">
                 <span>New password</span>
-                <button type="button" className="peek" onClick={toggle('newPassword')} tabIndex={-1}>
+                <button
+                  type="button"
+                  className="peek"
+                  onClick={toggle('newPassword')}
+                  tabIndex={-1}
+                >
                   {show.newPassword ? 'hide' : 'show'}
                 </button>
               </label>
@@ -146,15 +191,26 @@ export default function ChangePasswordPage() {
                 />
               </div>
               {errors.newPassword.length > 0 && (
-                <ul className="errlist">{errors.newPassword.map((m, i) => <li key={i}>{m}</li>)}</ul>
+                <ul className="errlist">
+                  {errors.newPassword.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
               )}
             </div>
 
             {/* 3. Confirm new password */}
-            <div className={`field ${errors.confirmPassword.length ? 'invalid' : ''}`}>
+            <div
+              className={`field ${errors.confirmPassword.length ? 'invalid' : ''}`}
+            >
               <label className="label" htmlFor="confirmPassword">
                 <span>Confirm new password</span>
-                <button type="button" className="peek" onClick={toggle('confirmPassword')} tabIndex={-1}>
+                <button
+                  type="button"
+                  className="peek"
+                  onClick={toggle('confirmPassword')}
+                  tabIndex={-1}
+                >
                   {show.confirmPassword ? 'hide' : 'show'}
                 </button>
               </label>
@@ -169,7 +225,11 @@ export default function ChangePasswordPage() {
                 />
               </div>
               {errors.confirmPassword.length > 0 && (
-                <ul className="errlist">{errors.confirmPassword.map((m, i) => <li key={i}>{m}</li>)}</ul>
+                <ul className="errlist">
+                  {errors.confirmPassword.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
               )}
             </div>
 
@@ -182,7 +242,9 @@ export default function ChangePasswordPage() {
             </button>
           </form>
 
-          <p className="alt-link"><Link to="/home">Back to home</Link></p>
+          <p className="alt-link">
+            <Link to="/home">Back to home</Link>
+          </p>
         </div>
       </main>
     </div>

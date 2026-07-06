@@ -18,7 +18,9 @@
   flex-direction: column;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
 }
 
 /* ---- header ---- */
@@ -35,14 +37,16 @@
   text-decoration: none;
 }
 .logo-badge {
-  width: 30px; height: 30px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   background: #fff;
   display: grid;
   place-items: center;
 }
 .logo-badge svg {
-  width: 18px; height: 18px;
+  width: 18px;
+  height: 18px;
   fill: none;
   stroke: var(--accent);
   stroke-width: 2.2;
@@ -83,8 +87,12 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.account-btn:hover { background: rgba(255, 255, 255, 0.22); }
-.account-btn .caret { font-size: 11px; }
+.account-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.account-btn .caret {
+  font-size: 11px;
+}
 
 .account-menu {
   position: absolute;
@@ -102,8 +110,14 @@
   animation: menu-in 0.15s ease;
 }
 @keyframes menu-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .account-menu button {
   text-align: left;
@@ -116,10 +130,14 @@
   cursor: pointer;
   transition: background 0.12s;
 }
-.account-menu button:hover { background: var(--bg); }
+.account-menu button:hover {
+  background: var(--bg);
+}
 
 /* ---- home card ---- */
-.home-card { text-align: center; }
+.home-card {
+  text-align: center;
+}
 .home-card .mail {
   color: var(--accent);
   font-weight: 600;
@@ -153,12 +171,21 @@
   text-decoration: none;
   font-weight: 500;
 }
-.subtitle a:hover { text-decoration: underline; }
+.subtitle a:hover {
+  text-decoration: underline;
+}
 
-form { display: flex; flex-direction: column; gap: 18px; }
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 
 /* ---- fields ---- */
-.field { display: flex; flex-direction: column; }
+.field {
+  display: flex;
+  flex-direction: column;
+}
 
 .label {
   display: flex;
@@ -175,7 +202,11 @@ form { display: flex; flex-direction: column; gap: 18px; }
   color: var(--faint);
 }
 
-.input-row { position: relative; display: flex; align-items: center; }
+.input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 
 input {
   width: 100%;
@@ -186,9 +217,13 @@ input {
   border-radius: 9px;
   padding: 11px 13px;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
-input::placeholder { color: #b6bec7; }
+input::placeholder {
+  color: #b6bec7;
+}
 input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
@@ -207,7 +242,9 @@ input:focus {
   padding: 0;
   cursor: pointer;
 }
-.peek:hover { color: var(--accent); }
+.peek:hover {
+  color: var(--accent);
+}
 
 /* per-field error list */
 .errlist {
@@ -240,11 +277,15 @@ input:focus {
   transition: color 0.2s;
 }
 .policy span::before {
-  content: "○";
+  content: '○';
   font-size: 10px;
 }
-.policy span.met { color: var(--ok); }
-.policy span.met::before { content: "●"; }
+.policy span.met {
+  color: var(--ok);
+}
+.policy span.met::before {
+  content: '●';
+}
 
 /* ---- submit ---- */
 .submit {
@@ -257,17 +298,28 @@ input:focus {
   border-radius: 9px;
   padding: 13px;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
 }
-.submit:hover:not(:disabled) { background: #2f5fd8; }
-.submit:disabled { opacity: 0.6; cursor: not-allowed; }
-.submit.loading { color: transparent; position: relative; }
+.submit:hover:not(:disabled) {
+  background: #2f5fd8;
+}
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.submit.loading {
+  color: transparent;
+  position: relative;
+}
 .submit.loading::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   margin: auto;
-  width: 15px; height: 15px;
+  width: 15px;
+  height: 15px;
   border: 2px solid rgba(255, 255, 255, 0.5);
   border-top-color: #fff;
   border-radius: 50%;
@@ -298,7 +350,9 @@ input:focus {
   text-decoration: none;
   font-weight: 500;
 }
-.alt-link a:hover { text-decoration: underline; }
+.alt-link a:hover {
+  text-decoration: underline;
+}
 
 /* ---- toast ---- */
 .toast {
@@ -324,7 +378,8 @@ input:focus {
 }
 .toast-icon {
   flex: none;
-  width: 20px; height: 20px;
+  width: 20px;
+  height: 20px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -335,9 +390,12 @@ input:focus {
 }
 
 /* ---- success state ---- */
-.card.success { text-align: center; }
+.card.success {
+  text-align: center;
+}
 .success .check {
-  width: 54px; height: 54px;
+  width: 54px;
+  height: 54px;
   margin: 0 auto 16px;
   border-radius: 50%;
   display: grid;
@@ -346,23 +404,60 @@ input:focus {
   background: rgba(31, 157, 107, 0.1);
   font-size: 26px;
 }
-.success h2 { font-size: 20px; font-weight: 600; margin: 0 0 8px; }
-.success p { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 auto; max-width: 32ch; }
-.success .mail { color: var(--accent); font-weight: 500; margin-top: 10px; }
+.success h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+.success p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 auto;
+  max-width: 32ch;
+}
+.success .mail {
+  color: var(--accent);
+  font-weight: 500;
+  margin-top: 10px;
+}
 
 /* status-icon color variants (expired / invalid) */
-.success .check.warn { color: #b07900; background: rgba(176, 121, 0, 0.12); }
-.success .check.bad  { color: var(--error); background: var(--error-soft); }
+.success .check.warn {
+  color: #b07900;
+  background: rgba(176, 121, 0, 0.12);
+}
+.success .check.bad {
+  color: var(--error);
+  background: var(--error-soft);
+}
 
 /* resend button centered in the status card */
-.resend-btn { margin: 4px auto 0; }
+.resend-btn {
+  margin: 4px auto 0;
+}
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 @keyframes toast-in {
-  from { opacity: 0; transform: translate(-50%, -8px); }
-  to   { opacity: 1; transform: translateX(-50%); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
