@@ -189,7 +189,6 @@ export default function SignupPage() {
     </div>
   )
 }
-
 function Field({ id, label, hint, errors = [], ...props }) {
   return (
     <div className={`field ${errors.length ? 'invalid' : ''}`}>

@@ -88,14 +88,14 @@ frontend/src/
 | POST | `/verifyEmail/:token` | — (called by `/verify` page; returns JSON, sets cookies) |
 | POST | `/resend/:token` | `{ verifyBase }` |
 | POST | `/login` | `{ email, password }` |
-| GET  | `/logout` | — (needs `accessToken`) |
+| POST | `/logout` | — (needs `accessToken`) |
 | POST | `/rotateToken` | — (needs `refreshToken`) |
 | POST | `/forgotPassword` | `{ email, resetBase }` |
-| GET  | `/resetPassword/:token/check` | — (read-only token pre-check; `200`=valid, `401`/`403` otherwise) |
+| POST | `/resetPassword/:token/check` | — (read-only token pre-check; `200`=valid, `401`/`403` otherwise) |
 | POST | `/resetPassword/:token` | `{ email, newPassword, confirmPassword }` |
 | POST | `/resetResend/:token` | `{ resetBase }` |
 | POST | `/changePassword` | `{ oldPassword, newPassword, confirmPassword }` (needs `accessToken`) |
-| GET  | `/me` | — (needs `accessToken`; `data` is the email string) |
+| POST | `/me` | — (needs `accessToken`; `data` is the email string) |
 
 ### Response shapes
 - **Error:** `{ success: false, message, errors }`. `errors` is an array of `{ path, msg }` for
@@ -108,7 +108,7 @@ frontend/src/
   `/verifyEmail/:token` and routes by result — `200`→`/home`, `401 expired`→`/verification-expired/:token`,
   `401 used`→`/already-verified`, `403`→`/verification-invalid`. (Backend returns JSON, never redirects.)
 - **Reset password:** `ResetPasswordPage` validates the token **on mount** via
-  `GET /resetPassword/:token/check` before rendering the form — `200`→show form, `401 expired/used`
+  `POST /resetPassword/:token/check` before rendering the form — `200`→show form, `401 expired/used`
   →`/reset-expired/:token` (with `state.reason`), `403`→inline "invalid link" state, network error
   →inline "couldn't verify" state. The submit still re-checks the token (defense-in-depth): on
   `401 expired/used` it navigates to `/reset-expired/:token` (Resend button → `/resetResend/:token`).

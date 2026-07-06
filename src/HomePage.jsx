@@ -17,7 +17,7 @@ export default function HomePage() {
 
     async function loadUser() {
       try {
-        const res = await apiFetch(ME_URL)
+        const res = await apiFetch(ME_URL, { method: 'POST' })
 
         if (res.status === 401 || res.status === 403) {
           // not authenticated (missing/expired/invalid token) or revoked → back to login

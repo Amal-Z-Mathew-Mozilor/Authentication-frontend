@@ -25,6 +25,7 @@ export default function ResetPasswordPage() {
     ;(async () => {
       try {
         const res = await fetch(`/pulse/users/resetPassword/${token}/check`, {
+          method: 'POST',
           credentials: 'include',
         })
 

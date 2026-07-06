@@ -37,8 +37,8 @@ function AccountMenu() {
   async function handleLogout() {
     setOpen(false)
     try {
-      // GET /logout clears the auth cookies + blacklists the token (needs the accessToken cookie)
-      await apiFetch('/pulse/users/logout')
+      // POST /logout clears the auth cookies + blacklists the token (needs the accessToken cookie)
+      await apiFetch('/pulse/users/logout', { method: 'POST' })
     } catch { /* ignore — redirect to the landing page regardless */ }
     navigate('/')
   }
