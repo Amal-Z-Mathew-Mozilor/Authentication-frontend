@@ -7,6 +7,7 @@
 // All requests are sent with credentials so the auth cookies ride along.
 
 const ROTATE_URL = '/pulse/users/rotateToken'
+const LOGIN_PATH = '/login'
 
 // Single-flight: concurrent expired requests share ONE rotateToken call (rotateToken deletes the
 // old refresh entry and issues a new one, so parallel rotations would clobber each other).
@@ -32,6 +33,17 @@ async function isExpired(res) {
   }
 }
 
+// Server signalled a hard session invalidation (e.g. the password was changed on another device).
+// The server has already cleared the auth cookies; we just send the user to /login.
+async function isInvalidated(res) {
+  try {
+    const data = await res.clone().json()
+    return /invalidated/i.test(data?.message || '')
+  } catch {
+    return false
+  }
+}
+
 export async function apiFetch(url, options = {}) {
   const opts = { credentials: 'include', ...options }
 
@@ -41,8 +53,17 @@ export async function apiFetch(url, options = {}) {
     const refreshed = await rotateOnce()
     if (refreshed) {
       res = await fetch(url, opts)   // retry once with the refreshed cookie
+    } else {
+      // rotation failed (session dead — e.g. refresh rejected by the cutoff) → client logout
+      window.location.href = LOGIN_PATH
+      return res
     }
-    // if not refreshed, fall through and return the original 401 — caller handles it
+  }
+
+  // hard session invalidation (access token still valid but issued before the cutoff) → logout
+  if (res.status === 401 && (await isInvalidated(res))) {
+    window.location.href = LOGIN_PATH
+    return res
   }
 
   return res

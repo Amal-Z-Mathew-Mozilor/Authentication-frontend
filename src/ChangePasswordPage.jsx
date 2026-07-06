@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Header from './Header.jsx'
 import { apiFetch } from './apiFetch.js'
@@ -15,6 +15,13 @@ export default function ChangePasswordPage() {
   const [show, setShow] = useState({ oldPassword: false, newPassword: false, confirmPassword: false })
 
   const toggle = (key) => () => setShow((s) => ({ ...s, [key]: !s[key] }))
+
+  // Changing the password invalidates every session (incl. this one), so send the user to login.
+  useEffect(() => {
+    if (status !== 'done') return
+    const t = setTimeout(() => navigate('/login'), 2000)
+    return () => clearTimeout(t)
+  }, [status, navigate])
 
   const update = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -78,8 +85,8 @@ export default function ChangePasswordPage() {
           <div className="card success">
             <div className="check">✓</div>
             <h2>Password changed</h2>
-            <p>Your password has been updated successfully.</p>
-            <p className="alt-link"><Link to="/home">Back to home</Link></p>
+            <p>For your security, you've been signed out on all devices. Redirecting to login…</p>
+            <p className="alt-link"><Link to="/login">Go to login now</Link></p>
           </div>
         </main>
       </div>
