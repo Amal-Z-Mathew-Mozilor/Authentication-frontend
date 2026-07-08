@@ -7,10 +7,28 @@ import './signup.css'
 
 const EMPTY = { heading: [], description: [] }
 
-// Sidebar sections required by the assignment — only "About cookies" is active for now.
+// Sidebar sections. `sectionKey` is the key in the cookie_policy.content jsonb / the
+// PUT `:section` path param. "Cookie preferences" is not built yet (disabled).
 const SECTIONS = [
-  { key: 'about', label: 'About cookies', active: true },
-  { key: 'use', label: 'Use of cookies' },
+  {
+    key: 'about',
+    sectionKey: 'aboutCookies',
+    label: 'About cookies',
+    active: true,
+    title: 'About cookies',
+    headingPlaceholder: 'What are cookies?',
+    descPlaceholder: 'Describe what cookies are and how this site uses them…',
+  },
+  {
+    key: 'use',
+    sectionKey: 'useOfCookies',
+    label: 'Use of cookies',
+    active: true,
+    title: 'Use of cookies',
+    headingPlaceholder: 'How do we use cookies?',
+    descPlaceholder:
+      'Describe how this website uses first- and third-party cookies…',
+  },
   { key: 'preferences', label: 'Cookie preferences' },
 ]
 
@@ -22,24 +40,42 @@ function group422(errorsArr) {
   return g
 }
 
+const blankData = () => ({
+  aboutCookies: { heading: '', description: '' },
+  useOfCookies: { heading: '', description: '' },
+})
+
 export default function CookiePolicyPage() {
   const { websiteId } = useParams()
   const navigate = useNavigate()
 
   const [url, setUrl] = useState('')
   const [load, setLoad] = useState('loading') // loading | ready | error
-  const [heading, setHeading] = useState('')
-  const [description, setDescription] = useState('')
+  const [active, setActive] = useState('about') // sidebar key
+  const [data, setData] = useState(blankData) // per-section { heading, description }
   const [errors, setErrors] = useState(EMPTY)
   const [banner, setBanner] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  const current = SECTIONS.find((s) => s.key === active)
+  const sectionKey = current.sectionKey
+  const heading = data[sectionKey].heading
+  const description = data[sectionKey].description
+
+  const setHeading = (v) =>
+    setData((p) => ({ ...p, [sectionKey]: { ...p[sectionKey], heading: v } }))
+  const setDescription = (v) =>
+    setData((p) => ({
+      ...p,
+      [sectionKey]: { ...p[sectionKey], description: v },
+    }))
+
   useEffect(() => {
     let active = true
     async function loadAll() {
       try {
-        // website URL (for the sidebar) + existing policy content
+        // website URL (for the sidebar) + existing policy content (all sections)
         const [listRes, polRes] = await Promise.all([
           apiFetch('/pulse/websites', { method: 'GET' }),
           apiFetch(`/pulse/websites/${websiteId}/cookie-policy`, {
@@ -65,9 +101,17 @@ export default function CookiePolicyPage() {
         const polData = await polRes.json().catch(() => ({}))
         const site = (listData.data || []).find((w) => w.id === websiteId)
         setUrl(site?.url || '')
-        const about = polData?.data?.content?.aboutCookies || {}
-        setHeading(about.heading || '')
-        setDescription(about.description || '')
+        const content = polData?.data?.content || {}
+        const next = blankData()
+        for (const s of SECTIONS) {
+          if (!s.sectionKey) continue
+          const c = content[s.sectionKey] || {}
+          next[s.sectionKey] = {
+            heading: c.heading || '',
+            description: c.description || '',
+          }
+        }
+        setData(next)
         setLoad('ready')
       } catch {
         if (active) {
@@ -83,6 +127,14 @@ export default function CookiePolicyPage() {
       active = false
     }
   }, [websiteId, navigate])
+
+  function switchSection(key) {
+    if (key === active) return
+    setActive(key)
+    setErrors(EMPTY)
+    setBanner(null)
+    setSaved(false)
+  }
 
   async function handleSave() {
     // Both fields are required — cannot save empty (matches CookieYes).
@@ -106,7 +158,7 @@ export default function CookiePolicyPage() {
     setSaving(true)
     try {
       const res = await apiFetch(
-        `/pulse/websites/${websiteId}/cookie-policy`,
+        `/pulse/websites/${websiteId}/cookie-policy/${sectionKey}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -114,13 +166,13 @@ export default function CookiePolicyPage() {
         },
       )
       if (res.status === 401 || res.status === 403) return navigate('/login')
-      const data = await res.json().catch(() => ({}))
+      const resData = await res.json().catch(() => ({}))
       if (res.ok) {
         setSaved(true)
       } else if (res.status === 422) {
-        setErrors(group422(data.errors))
+        setErrors(group422(resData.errors))
       } else {
-        setBanner(data.message || 'Could not save.')
+        setBanner(resData.message || 'Could not save.')
       }
     } catch {
       setBanner('Could not reach the server. Is the backend running on :8000?')
@@ -145,8 +197,11 @@ export default function CookiePolicyPage() {
               <button
                 key={s.key}
                 type="button"
-                className={`cp-side-item ${s.active ? 'active' : 'disabled'}`}
+                className={`cp-side-item ${
+                  s.key === active ? 'active' : s.active ? '' : 'disabled'
+                }`}
                 disabled={!s.active}
+                onClick={() => switchSection(s.key)}
               >
                 {s.label}
               </button>
@@ -155,7 +210,7 @@ export default function CookiePolicyPage() {
         </aside>
 
         <main className="cp-main">
-          <h1 className="cp-title">About cookies</h1>
+          <h1 className="cp-title">{current.title}</h1>
 
           {banner && (
             <div className="banner" role="alert">
@@ -182,7 +237,7 @@ export default function CookiePolicyPage() {
                         setErrors((p) => ({ ...p, heading: [] }))
                       setSaved(false)
                     }}
-                    placeholder="What are cookies?"
+                    placeholder={current.headingPlaceholder}
                   />
                 </div>
                 {errors.heading.length > 0 && (
@@ -201,6 +256,7 @@ export default function CookiePolicyPage() {
                   <span>Description</span>
                 </label>
                 <RichTextDescription
+                  key={sectionKey}
                   value={description}
                   onChange={(html) => {
                     setDescription(html)
@@ -219,12 +275,12 @@ export default function CookiePolicyPage() {
                       navigate('/login')
                       return null
                     }
-                    const data = await res.json().catch(() => ({}))
-                    if (res.ok && data?.data?.url) return data.data.url
-                    setBanner(data.message || 'Could not upload the image.')
+                    const upData = await res.json().catch(() => ({}))
+                    if (res.ok && upData?.data?.url) return upData.data.url
+                    setBanner(upData.message || 'Could not upload the image.')
                     return null
                   }}
-                  placeholder="Describe what cookies are and how this site uses them…"
+                  placeholder={current.descPlaceholder}
                 />
                 {errors.description.length > 0 && (
                   <ul className="errlist">

@@ -34,7 +34,7 @@ frontend/src/
 ├── apiFetch.js                 # fetch wrapper: token-rotation interceptor (see below)
 ├── Header.jsx                  # shared top bar (Pulse logo); optional "Web Manager" link + Account menu via <Header account />
 ├── WebManagerPage.jsx          # /web-manager — list/add/edit/delete websites (calls /pulse/websites)
-├── CookiePolicyPage.jsx        # /cookie-policy/:websiteId — About cookies editor (heading + rich-text description)
+├── CookiePolicyPage.jsx        # /cookie-policy/:websiteId — section-aware editor (About cookies + Use of cookies; heading + rich-text description)
 ├── RichTextDescription.jsx     # reusable Tiptap rich-text editor (toolbar, links, png/jpg image upload) for Description fields
 ├── LandingNav.jsx / Footer.jsx # landing-page chrome
 ├── LandingPage.jsx             # marketing landing ("/")
@@ -60,7 +60,7 @@ frontend/src/
 | `/verify/:token` | VerifyEmailPage (POSTs to backend, then routes by result) |
 | `/change-password` | ChangePasswordPage |
 | `/web-manager` | WebManagerPage (auth'd; list/add/edit/delete websites) |
-| `/cookie-policy/:websiteId` | CookiePolicyPage (auth'd; About cookies editor) |
+| `/cookie-policy/:websiteId` | CookiePolicyPage (auth'd; section-aware editor — About cookies + Use of cookies) |
 | `/verification-expired/:token` · `/verification-invalid` · `/already-verified` · `/verification-required` | status pages |
 
 ## Conventions
@@ -111,8 +111,8 @@ frontend/src/
 | POST | `/pulse/websites` | `{ name, url }` (`201` on success) |
 | PUT | `/pulse/websites/:id` | `{ name, url }` (`404` if not owned) |
 | DELETE | `/pulse/websites/:id` | — (`404` if not owned) |
-| GET | `/pulse/websites/:id/cookie-policy` | — (`data.content` = `{ aboutCookies: { heading, description } }`) |
-| PUT | `/pulse/websites/:id/cookie-policy` | `{ heading, description }` (description = HTML; upserts) |
+| GET | `/pulse/websites/:id/cookie-policy` | — (`data.content` = `{ aboutCookies: {…}, useOfCookies: { heading, description } }`) |
+| PUT | `/pulse/websites/:id/cookie-policy/:section` | `{ heading, description }` (`:section` = `aboutCookies`\|`useOfCookies`; description = HTML; upserts, preserves siblings) |
 | POST | `/pulse/websites/:id/images` | multipart `file` (png/jpg) → `{ data: { url } }` |
 | GET | `/pulse/images/:id` | — (public; returns the image binary) |
 
