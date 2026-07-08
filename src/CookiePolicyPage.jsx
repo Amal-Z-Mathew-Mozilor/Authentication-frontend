@@ -208,6 +208,22 @@ export default function CookiePolicyPage() {
                       setErrors((p) => ({ ...p, description: [] }))
                     setSaved(false)
                   }}
+                  onImageUpload={async (file) => {
+                    const fd = new FormData()
+                    fd.append('file', file)
+                    const res = await apiFetch(
+                      `/pulse/websites/${websiteId}/images`,
+                      { method: 'POST', body: fd },
+                    )
+                    if (res.status === 401 || res.status === 403) {
+                      navigate('/login')
+                      return null
+                    }
+                    const data = await res.json().catch(() => ({}))
+                    if (res.ok && data?.data?.url) return data.data.url
+                    setBanner(data.message || 'Could not upload the image.')
+                    return null
+                  }}
                   placeholder="Describe what cookies are and how this site uses them…"
                 />
                 {errors.description.length > 0 && (

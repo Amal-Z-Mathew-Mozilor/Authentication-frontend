@@ -8,6 +8,21 @@ import Link from '@tiptap/extension-link'
 // Non-inclusive Link: typing right after a link does NOT extend the link.
 const NonInclusiveLink = Link.extend({ inclusive: false })
 
+// Image with a width attribute so the custom menu's "Resize" can set it.
+const ResizableImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        renderHTML: (attrs) =>
+          attrs.width ? { style: `width: ${attrs.width}` } : {},
+        parseHTML: (el) => el.style?.width || el.getAttribute('width') || null,
+      },
+    }
+  },
+})
+
 // Inline SVG icons (project uses no icon package). currentColor so CSS controls color.
 const SVG = (children) => (
   <svg
@@ -100,7 +115,9 @@ export default function RichTextDescription({
       // v3 StarterKit bundles link — disable it and use our non-inclusive Link instead.
       StarterKit.configure({ link: false }),
       NonInclusiveLink.configure({ openOnClick: false, autolink: false }),
-      Image,
+      // Block image node → clicking it selects the node (visible selection box); the
+      // .ProseMirror-selectednode outline shows it, and Backspace/Delete removes it.
+      ResizableImage.configure({ inline: false }),
       Placeholder.configure({ placeholder }),
     ],
     content: value || '',
@@ -239,7 +256,7 @@ export default function RichTextDescription({
     if (onImageUpload) {
       const input = document.createElement('input')
       input.type = 'file'
-      input.accept = 'image/*'
+      input.accept = 'image/png,image/jpeg'
       input.onchange = async () => {
         const file = input.files?.[0]
         if (!file) return

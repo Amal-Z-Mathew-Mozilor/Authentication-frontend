@@ -35,7 +35,7 @@ frontend/src/
 ├── Header.jsx                  # shared top bar (Pulse logo); optional "Web Manager" link + Account menu via <Header account />
 ├── WebManagerPage.jsx          # /web-manager — list/add/edit/delete websites (calls /pulse/websites)
 ├── CookiePolicyPage.jsx        # /cookie-policy/:websiteId — About cookies editor (heading + rich-text description)
-├── RichTextDescription.jsx     # reusable Tiptap rich-text editor (toolbar, links, image) for Description fields
+├── RichTextDescription.jsx     # reusable Tiptap rich-text editor (toolbar, links, png/jpg image upload) for Description fields
 ├── LandingNav.jsx / Footer.jsx # landing-page chrome
 ├── LandingPage.jsx             # marketing landing ("/")
 ├── SignupPage.jsx  LoginPage.jsx  ForgotPasswordPage.jsx  ResetPasswordPage.jsx
@@ -113,6 +113,8 @@ frontend/src/
 | DELETE | `/pulse/websites/:id` | — (`404` if not owned) |
 | GET | `/pulse/websites/:id/cookie-policy` | — (`data.content` = `{ aboutCookies: { heading, description } }`) |
 | PUT | `/pulse/websites/:id/cookie-policy` | `{ heading, description }` (description = HTML; upserts) |
+| POST | `/pulse/websites/:id/images` | multipart `file` (png/jpg) → `{ data: { url } }` |
+| GET | `/pulse/images/:id` | — (public; returns the image binary) |
 
 ### Response shapes
 - **Error:** `{ success: false, message, errors }`. `errors` is an array of `{ path, msg }` for
