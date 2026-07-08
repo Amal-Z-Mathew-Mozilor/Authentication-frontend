@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Header from './Header.jsx'
 import RichTextDescription from './RichTextDescription.jsx'
+import DatePicker from './DatePicker.jsx'
+import { todayISO } from './dateUtils.js'
 import { apiFetch } from './apiFetch.js'
 import './signup.css'
 
@@ -29,7 +31,16 @@ const SECTIONS = [
     descPlaceholder:
       'Describe how this website uses first- and third-party cookies…',
   },
-  { key: 'preferences', label: 'Cookie preferences' },
+  {
+    key: 'preferences',
+    sectionKey: 'cookiePreferences',
+    label: 'Cookie preferences',
+    active: true,
+    title: 'Cookie preferences',
+    headingPlaceholder: 'Manage cookie preferences',
+    descPlaceholder:
+      'Explain how visitors can revisit their consent and manage cookies in their browser…',
+  },
 ]
 
 function group422(errorsArr) {
@@ -43,6 +54,7 @@ function group422(errorsArr) {
 const blankData = () => ({
   aboutCookies: { heading: '', description: '' },
   useOfCookies: { heading: '', description: '' },
+  cookiePreferences: { heading: '', description: '' },
 })
 
 export default function CookiePolicyPage() {
@@ -53,6 +65,7 @@ export default function CookiePolicyPage() {
   const [load, setLoad] = useState('loading') // loading | ready | error
   const [active, setActive] = useState('about') // sidebar key
   const [data, setData] = useState(blankData) // per-section { heading, description }
+  const [effectiveDate, setEffectiveDate] = useState('') // ISO YYYY-MM-DD (policy-level)
   const [errors, setErrors] = useState(EMPTY)
   const [banner, setBanner] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -112,6 +125,8 @@ export default function CookiePolicyPage() {
           }
         }
         setData(next)
+        // Effective date is policy-level; default to today if none saved yet.
+        setEffectiveDate(content.effectiveDate || todayISO())
         setLoad('ready')
       } catch {
         if (active) {
@@ -167,13 +182,31 @@ export default function CookiePolicyPage() {
       )
       if (res.status === 401 || res.status === 403) return navigate('/login')
       const resData = await res.json().catch(() => ({}))
-      if (res.ok) {
-        setSaved(true)
-      } else if (res.status === 422) {
-        setErrors(group422(resData.errors))
-      } else {
-        setBanner(resData.message || 'Could not save.')
+      if (!res.ok) {
+        if (res.status === 422) setErrors(group422(resData.errors))
+        else setBanner(resData.message || 'Could not save.')
+        return
       }
+
+      // On the Cookie preferences tab, also persist the policy-level effective date.
+      if (active === 'preferences') {
+        const dateRes = await apiFetch(
+          `/pulse/websites/${websiteId}/cookie-policy`,
+          {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ effectiveDate: effectiveDate || todayISO() }),
+          },
+        )
+        if (dateRes.status === 401 || dateRes.status === 403)
+          return navigate('/login')
+        if (!dateRes.ok) {
+          const dd = await dateRes.json().catch(() => ({}))
+          setBanner(dd.message || 'Could not save the effective date.')
+          return
+        }
+      }
+      setSaved(true)
     } catch {
       setBanner('Could not reach the server. Is the backend running on :8000?')
     } finally {
@@ -290,6 +323,27 @@ export default function CookiePolicyPage() {
                   </ul>
                 )}
               </div>
+
+              {active === 'preferences' && (
+                <div className="field cp-date-field">
+                  <label className="label">
+                    <span>What is the effective date for this Cookie Policy?</span>
+                  </label>
+                  <DatePicker
+                    value={effectiveDate}
+                    onChange={(iso) => {
+                      setEffectiveDate(iso)
+                      setSaved(false)
+                    }}
+                    placeholder="Select the effective date"
+                  />
+                  <p className="cp-generate-note">
+                    By clicking &quot;Generate cookie policy&quot;, you agree to our{' '}
+                    <a href="#terms">Terms and Conditions</a> &amp;{' '}
+                    <a href="#privacy">Privacy Policy</a>.
+                  </p>
+                </div>
+              )}
 
               <div className="cp-actions">
                 <button

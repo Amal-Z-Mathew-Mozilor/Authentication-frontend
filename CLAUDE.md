@@ -34,8 +34,10 @@ frontend/src/
 ├── apiFetch.js                 # fetch wrapper: token-rotation interceptor (see below)
 ├── Header.jsx                  # shared top bar (Pulse logo); optional "Web Manager" link + Account menu via <Header account />
 ├── WebManagerPage.jsx          # /web-manager — list/add/edit/delete websites (calls /pulse/websites)
-├── CookiePolicyPage.jsx        # /cookie-policy/:websiteId — section-aware editor (About cookies + Use of cookies; heading + rich-text description)
+├── CookiePolicyPage.jsx        # /cookie-policy/:websiteId — section-aware editor (About cookies + Use of cookies + Cookie preferences; heading + rich-text description; effective-date picker on the preferences tab)
 ├── RichTextDescription.jsx     # reusable Tiptap rich-text editor (toolbar, links, png/jpg image upload) for Description fields
+├── DatePicker.jsx              # custom calendar date-picker (no UI library) for the effective-date field; ISO in/out
+├── dateUtils.js                # local-date helpers (toISO/todayISO/parseISO/formatLong) shared by DatePicker + CookiePolicyPage
 ├── LandingNav.jsx / Footer.jsx # landing-page chrome
 ├── LandingPage.jsx             # marketing landing ("/")
 ├── SignupPage.jsx  LoginPage.jsx  ForgotPasswordPage.jsx  ResetPasswordPage.jsx
@@ -60,7 +62,7 @@ frontend/src/
 | `/verify/:token` | VerifyEmailPage (POSTs to backend, then routes by result) |
 | `/change-password` | ChangePasswordPage |
 | `/web-manager` | WebManagerPage (auth'd; list/add/edit/delete websites) |
-| `/cookie-policy/:websiteId` | CookiePolicyPage (auth'd; section-aware editor — About cookies + Use of cookies) |
+| `/cookie-policy/:websiteId` | CookiePolicyPage (auth'd; section-aware editor — About cookies + Use of cookies + Cookie preferences w/ effective date) |
 | `/verification-expired/:token` · `/verification-invalid` · `/already-verified` · `/verification-required` | status pages |
 
 ## Conventions
@@ -111,8 +113,9 @@ frontend/src/
 | POST | `/pulse/websites` | `{ name, url }` (`201` on success) |
 | PUT | `/pulse/websites/:id` | `{ name, url }` (`404` if not owned) |
 | DELETE | `/pulse/websites/:id` | — (`404` if not owned) |
-| GET | `/pulse/websites/:id/cookie-policy` | — (`data.content` = `{ aboutCookies: {…}, useOfCookies: { heading, description } }`) |
-| PUT | `/pulse/websites/:id/cookie-policy/:section` | `{ heading, description }` (`:section` = `aboutCookies`\|`useOfCookies`; description = HTML; upserts, preserves siblings) |
+| GET | `/pulse/websites/:id/cookie-policy` | — (`data.content` = `{ aboutCookies: {…}, useOfCookies: {…}, cookiePreferences: { heading, description }, effectiveDate }`) |
+| PUT | `/pulse/websites/:id/cookie-policy/:section` | `{ heading, description }` (`:section` = `aboutCookies`\|`useOfCookies`\|`cookiePreferences`; description = HTML; upserts, preserves siblings) |
+| PUT | `/pulse/websites/:id/cookie-policy` | `{ effectiveDate }` (base path; ISO `YYYY-MM-DD`; upserts policy meta, preserves sections) |
 | POST | `/pulse/websites/:id/images` | multipart `file` (png/jpg) → `{ data: { url } }` |
 | GET | `/pulse/images/:id` | — (public; returns the image binary) |
 
