@@ -9,6 +9,7 @@ authentication backend (`../backend`, a separate repo).
 - **Vite 8** (dev server / bundler), **react-router-dom** for routing
 - **Plain JavaScript / JSX** — no TypeScript
 - **ESLint** (flat config in `eslint.config.js`), ES modules (`"type": "module"`)
+- **Tiptap** (v3) for the rich-text Description editor (`RichTextDescription.jsx`); otherwise
 - No component/UI library and no icon package — UI is built with plain elements + `signup.css`
   classes and inline SVGs.
 
@@ -33,6 +34,8 @@ frontend/src/
 ├── apiFetch.js                 # fetch wrapper: token-rotation interceptor (see below)
 ├── Header.jsx                  # shared top bar (Pulse logo); optional "Web Manager" link + Account menu via <Header account />
 ├── WebManagerPage.jsx          # /web-manager — list/add/edit/delete websites (calls /pulse/websites)
+├── CookiePolicyPage.jsx        # /cookie-policy/:websiteId — About cookies editor (heading + rich-text description)
+├── RichTextDescription.jsx     # reusable Tiptap rich-text editor (toolbar, links, image) for Description fields
 ├── LandingNav.jsx / Footer.jsx # landing-page chrome
 ├── LandingPage.jsx             # marketing landing ("/")
 ├── SignupPage.jsx  LoginPage.jsx  ForgotPasswordPage.jsx  ResetPasswordPage.jsx
@@ -57,6 +60,7 @@ frontend/src/
 | `/verify/:token` | VerifyEmailPage (POSTs to backend, then routes by result) |
 | `/change-password` | ChangePasswordPage |
 | `/web-manager` | WebManagerPage (auth'd; list/add/edit/delete websites) |
+| `/cookie-policy/:websiteId` | CookiePolicyPage (auth'd; About cookies editor) |
 | `/verification-expired/:token` · `/verification-invalid` · `/already-verified` · `/verification-required` | status pages |
 
 ## Conventions
@@ -107,6 +111,8 @@ frontend/src/
 | POST | `/pulse/websites` | `{ name, url }` (`201` on success) |
 | PUT | `/pulse/websites/:id` | `{ name, url }` (`404` if not owned) |
 | DELETE | `/pulse/websites/:id` | — (`404` if not owned) |
+| GET | `/pulse/websites/:id/cookie-policy` | — (`data.content` = `{ aboutCookies: { heading, description } }`) |
+| PUT | `/pulse/websites/:id/cookie-policy` | `{ heading, description }` (description = HTML; upserts) |
 
 ### Response shapes
 - **Error:** `{ success: false, message, errors }`. `errors` is an array of `{ path, msg }` for

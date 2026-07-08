@@ -341,8 +341,7 @@ export default function WebManagerPage() {
                         <button
                           type="button"
                           className="btn-secondary"
-                          title="Cookie policy — coming soon"
-                          disabled
+                          onClick={() => navigate(`/cookie-policy/${w.id}`)}
                         >
                           Cookie policy
                         </button>
