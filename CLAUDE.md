@@ -31,7 +31,8 @@ frontend/src/
 ├── main.jsx                    # bootstrap (createRoot + <StrictMode>)
 ├── App.jsx                     # <BrowserRouter> + all <Route>s
 ├── apiFetch.js                 # fetch wrapper: token-rotation interceptor (see below)
-├── Header.jsx                  # shared top bar (Pulse logo); optional Account menu via <Header account />
+├── Header.jsx                  # shared top bar (Pulse logo); optional "Web Manager" link + Account menu via <Header account />
+├── WebManagerPage.jsx          # /web-manager — list/add/edit/delete websites (calls /pulse/websites)
 ├── LandingNav.jsx / Footer.jsx # landing-page chrome
 ├── LandingPage.jsx             # marketing landing ("/")
 ├── SignupPage.jsx  LoginPage.jsx  ForgotPasswordPage.jsx  ResetPasswordPage.jsx
@@ -55,6 +56,7 @@ frontend/src/
 | `/home` | HomePage (auth'd; Account menu) |
 | `/verify/:token` | VerifyEmailPage (POSTs to backend, then routes by result) |
 | `/change-password` | ChangePasswordPage |
+| `/web-manager` | WebManagerPage (auth'd; list/add/edit/delete websites) |
 | `/verification-expired/:token` · `/verification-invalid` · `/already-verified` · `/verification-required` | status pages |
 
 ## Conventions
@@ -96,6 +98,15 @@ frontend/src/
 | POST | `/resetResend/:token` | `{ resetBase }` |
 | POST | `/changePassword` | `{ oldPassword, newPassword, confirmPassword }` (needs `accessToken`) |
 | POST | `/me` | — (needs `accessToken`; `data` is the email string) |
+
+**Websites** — base `/pulse/websites` (REST verbs; all need `accessToken`; `data` is user-scoped):
+
+| Method | Path | Body |
+|--------|------|------|
+| GET | `/pulse/websites` | — (`data` = array of `{ id, name, url, createdAt }`) |
+| POST | `/pulse/websites` | `{ name, url }` (`201` on success) |
+| PUT | `/pulse/websites/:id` | `{ name, url }` (`404` if not owned) |
+| DELETE | `/pulse/websites/:id` | — (`404` if not owned) |
 
 ### Response shapes
 - **Error:** `{ success: false, message, errors }`. `errors` is an array of `{ path, msg }` for

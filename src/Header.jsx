@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { apiFetch } from './apiFetch.js'
 
 export default function Header({ account = false }) {
+  const navigate = useNavigate()
   return (
     <header className="header">
       <Link className="logo" to="/">
@@ -14,7 +15,18 @@ export default function Header({ account = false }) {
         <span className="logo-name">Pulse</span>
       </Link>
 
-      {account && <AccountMenu />}
+      {account && (
+        <nav className="header-nav">
+          <button
+            type="button"
+            className="nav-link"
+            onClick={() => navigate('/web-manager')}
+          >
+            Web Manager
+          </button>
+          <AccountMenu />
+        </nav>
+      )}
     </header>
   )
 }

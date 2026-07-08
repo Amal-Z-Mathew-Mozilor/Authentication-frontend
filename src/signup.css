@@ -461,3 +461,163 @@ input:focus {
     transition: none !important;
   }
 }
+
+/* ---- header nav (authenticated) ---- */
+.header-nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.header-nav .account {
+  margin-left: 0;
+}
+.nav-link {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 7px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ---- Web Manager ---- */
+.wm {
+  width: 100%;
+  max-width: 720px;
+}
+.wm-add {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 22px 24px;
+  box-shadow: 0 6px 24px -16px rgba(31, 39, 51, 0.4);
+  margin-bottom: 22px;
+}
+.wm-add-row {
+  flex-direction: row;
+  display: flex;
+  gap: 14px;
+}
+.wm-add-row .field {
+  flex: 1;
+  min-width: 0;
+}
+.wm-add-btn {
+  align-self: flex-start;
+  padding: 11px 22px;
+}
+.wm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.wm-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 6px 24px -18px rgba(31, 39, 51, 0.4);
+}
+.wm-row-main {
+  flex: 1;
+  min-width: 0;
+}
+.wm-row-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+}
+.wm-row-url {
+  font-size: 13px;
+  color: var(--muted);
+  word-break: break-all;
+  margin-top: 2px;
+}
+.wm-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: flex-start;
+}
+.wm-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 28px;
+}
+.wm-confirm {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.wm-confirm-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+}
+.wm-edit {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.wm-edit .field {
+  flex: 1;
+  min-width: 160px;
+  margin: 0;
+}
+.wm-inline-btn {
+  margin-top: 0;
+  padding: 9px 16px;
+  font-size: 13px;
+}
+.btn-secondary {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #eef1f5;
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-danger {
+  background: var(--error-soft);
+  border: 1px solid #f3c9c6;
+  color: var(--error);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #fbe0de;
+}
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

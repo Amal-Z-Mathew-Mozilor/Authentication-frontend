@@ -8,6 +8,7 @@ import ResetExpiredPage from './ResetExpiredPage.jsx'
 import HomePage from './HomePage.jsx'
 import VerifyEmailPage from './VerifyEmailPage.jsx'
 import ChangePasswordPage from './ChangePasswordPage.jsx'
+import WebManagerPage from './WebManagerPage.jsx'
 import VerifiedAlreadyPage from './VerifiedAlreadyPage.jsx'
 import VerificationExpiredPage from './VerificationExpiredPage.jsx'
 import VerificationInvalidPage from './VerificationInvalidPage.jsx'
@@ -26,6 +27,7 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/verify/:token" element={<VerifyEmailPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
+        <Route path="/web-manager" element={<WebManagerPage />} />
         <Route path="/already-verified" element={<VerifiedAlreadyPage />} />
         <Route
           path="/verification-expired/:token"
