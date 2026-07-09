@@ -69,9 +69,19 @@ export default function CookiePolicyPage() {
   const [errors, setErrors] = useState(EMPTY)
   const [banner, setBanner] = useState(null)
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [toast, setToast] = useState(null)
+
+  // Auto-dismiss the success toast after ~4s (matches the app's other toasts).
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(t)
+  }, [toast])
 
   const current = SECTIONS.find((s) => s.key === active)
+  const idx = SECTIONS.findIndex((s) => s.key === active)
+  const prevKey = SECTIONS[idx - 1]?.key
+  const nextKey = SECTIONS[idx + 1]?.key
   const sectionKey = current.sectionKey
   const heading = data[sectionKey].heading
   const description = data[sectionKey].description
@@ -148,7 +158,6 @@ export default function CookiePolicyPage() {
     setActive(key)
     setErrors(EMPTY)
     setBanner(null)
-    setSaved(false)
   }
 
   // Image ids currently used across ALL section editors (live HTML in `data`), so the
@@ -162,7 +171,9 @@ export default function CookiePolicyPage() {
     return [...new Set(urls.map((u) => u.split('/').pop()))]
   }
 
-  async function handleSave() {
+  // Save the current section (+ effective date on the preferences tab). Returns true on a
+  // clean save, false on validation/request failure. Shared by Save draft and Prev/Next.
+  async function saveCurrent() {
     // Both fields are required — cannot save empty (matches CookieYes).
     const next = { heading: [], description: [] }
     if (!heading.trim()) next.heading.push('This field cannot be empty.')
@@ -174,13 +185,11 @@ export default function CookiePolicyPage() {
     if (next.heading.length || next.description.length) {
       setErrors(next)
       setBanner(null)
-      setSaved(false)
-      return
+      return false
     }
 
     setErrors(EMPTY)
     setBanner(null)
-    setSaved(false)
     setSaving(true)
     try {
       const res = await apiFetch(
@@ -195,12 +204,15 @@ export default function CookiePolicyPage() {
           }),
         },
       )
-      if (res.status === 401 || res.status === 403) return navigate('/login')
+      if (res.status === 401 || res.status === 403) {
+        navigate('/login')
+        return false
+      }
       const resData = await res.json().catch(() => ({}))
       if (!res.ok) {
         if (res.status === 422) setErrors(group422(resData.errors))
         else setBanner(resData.message || 'Could not save.')
-        return
+        return false
       }
 
       // On the Cookie preferences tab, also persist the policy-level effective date.
@@ -216,20 +228,36 @@ export default function CookiePolicyPage() {
             }),
           },
         )
-        if (dateRes.status === 401 || dateRes.status === 403)
-          return navigate('/login')
+        if (dateRes.status === 401 || dateRes.status === 403) {
+          navigate('/login')
+          return false
+        }
         if (!dateRes.ok) {
           const dd = await dateRes.json().catch(() => ({}))
           setBanner(dd.message || 'Could not save the effective date.')
-          return
+          return false
         }
       }
-      setSaved(true)
+      setToast({ message: 'Draft saved successfully!' })
+      return true
     } catch {
       setBanner('Could not reach the server. Is the backend running on :8000?')
+      return false
     } finally {
       setSaving(false)
     }
+  }
+
+  // Save draft — save in place, no navigation.
+  async function handleSave() {
+    await saveCurrent()
+  }
+
+  // Previous/Next — auto-save the current section, then move only if it saved cleanly.
+  async function goTo(key) {
+    if (!key) return
+    const ok = await saveCurrent()
+    if (ok) switchSection(key)
   }
 
   return (
@@ -286,7 +314,6 @@ export default function CookiePolicyPage() {
                       setHeading(e.target.value)
                       if (errors.heading.length)
                         setErrors((p) => ({ ...p, heading: [] }))
-                      setSaved(false)
                     }}
                     placeholder={current.headingPlaceholder}
                   />
@@ -313,7 +340,6 @@ export default function CookiePolicyPage() {
                     setDescription(html)
                     if (errors.description.length)
                       setErrors((p) => ({ ...p, description: [] }))
-                    setSaved(false)
                   }}
                   onImageUpload={async (file) => {
                     const fd = new FormData()
@@ -351,7 +377,6 @@ export default function CookiePolicyPage() {
                     value={effectiveDate}
                     onChange={(iso) => {
                       setEffectiveDate(iso)
-                      setSaved(false)
                     }}
                     placeholder="Select the effective date"
                   />
@@ -366,18 +391,85 @@ export default function CookiePolicyPage() {
               <div className="cp-actions">
                 <button
                   type="button"
-                  className={`submit cp-save ${saving ? 'loading' : ''}`}
-                  onClick={handleSave}
-                  disabled={saving}
+                  className="cp-btn cp-prev"
+                  onClick={() => goTo(prevKey)}
+                  disabled={saving || !prevKey}
                 >
-                  Save draft
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                  Previous
                 </button>
-                {saved && <span className="cp-saved">Saved ✓</span>}
+                <div className="cp-actions-right">
+                  <button
+                    type="button"
+                    className={`cp-btn cp-save ${saving ? 'loading' : ''}`}
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
+                    Save draft
+                  </button>
+                  <button
+                    type="button"
+                    className={`submit cp-next ${saving ? 'loading' : ''}`}
+                    onClick={() => goTo(nextKey)}
+                    disabled={saving || !nextKey}
+                  >
+                    Next
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </>
           )}
         </main>
       </div>
+      {toast && (
+        <div
+          className="toast toast-success"
+          role="alert"
+          onClick={() => setToast(null)}
+        >
+          <svg
+            className="toast-check"
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="8 12 11 15 16 9" />
+          </svg>
+          <span>{toast.message}</span>
+        </div>
+      )}
     </div>
   )
 }

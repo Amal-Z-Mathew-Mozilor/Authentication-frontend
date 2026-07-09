@@ -393,6 +393,26 @@ input:focus {
   font-size: 13px;
   font-weight: 700;
 }
+/* Success variant — solid pale-green fill, anchored top-right, outlined check icon
+   (e.g. "Draft saved successfully!"). No left accent bar. */
+.toast.toast-success {
+  top: 88px;
+  left: auto;
+  right: 22px;
+  transform: none;
+  gap: 12px;
+  padding: 16px 22px;
+  background: #c9e9db;
+  border: 1px solid #a9d8c3;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  animation: toast-in-right 0.25s ease;
+}
+.toast-success .toast-check {
+  flex: none;
+  color: var(--ok);
+}
 
 /* ---- success state ---- */
 .card.success {
@@ -455,6 +475,17 @@ input:focus {
   to {
     opacity: 1;
     transform: translateX(-50%);
+  }
+}
+/* Right-anchored slide-in (no -50% centering) for the top-right success toast. */
+@keyframes toast-in-right {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -724,16 +755,46 @@ input:focus {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-top: 12px;
 }
-.cp-save {
-  align-self: flex-start;
-  padding: 11px 22px;
-  margin-top: 4px;
+/* Previous sits left; Save draft + Next are pushed to the right. */
+.cp-actions-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.cp-saved {
-  color: var(--ok);
-  font-size: 13px;
+/* Secondary (outlined) button — Previous + Save draft. */
+.cp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 20px;
+  font-size: 14px;
   font-weight: 500;
+  color: var(--text);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.cp-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--bg);
+}
+.cp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* Next (primary) — align the chevron with the label. */
+.cp-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 22px;
 }
 
 /* ---- Effective-date picker (custom calendar) ---- */
