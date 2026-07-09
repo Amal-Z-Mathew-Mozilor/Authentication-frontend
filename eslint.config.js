@@ -18,4 +18,10 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Config files run in Node, not the browser — give them the Node globals
+    // (e.g. `process` in vite.config.js's proxy-target lookup).
+    files: ['vite.config.js', 'eslint.config.js'],
+    languageOptions: { globals: globals.node },
+  },
 ])
