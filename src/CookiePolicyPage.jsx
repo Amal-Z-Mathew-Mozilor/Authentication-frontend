@@ -151,6 +151,17 @@ export default function CookiePolicyPage() {
     setSaved(false)
   }
 
+  // Image ids currently used across ALL section editors (live HTML in `data`), so the
+  // backend keeps them even for sections not saved yet — see the cleanup plan doc.
+  function collectUsedImageIds() {
+    const urls =
+      Object.values(data)
+        .map((s) => s.description || '')
+        .join(' ')
+        .match(/\/pulse\/images\/[0-9a-f-]{36}/gi) || []
+    return [...new Set(urls.map((u) => u.split('/').pop()))]
+  }
+
   async function handleSave() {
     // Both fields are required — cannot save empty (matches CookieYes).
     const next = { heading: [], description: [] }
@@ -177,7 +188,11 @@ export default function CookiePolicyPage() {
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ heading, description }),
+          body: JSON.stringify({
+            heading,
+            description,
+            usedImageIds: collectUsedImageIds(),
+          }),
         },
       )
       if (res.status === 401 || res.status === 403) return navigate('/login')
@@ -195,7 +210,10 @@ export default function CookiePolicyPage() {
           {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ effectiveDate: effectiveDate || todayISO() }),
+            body: JSON.stringify({
+              effectiveDate: effectiveDate || todayISO(),
+              usedImageIds: collectUsedImageIds(),
+            }),
           },
         )
         if (dateRes.status === 401 || dateRes.status === 403)

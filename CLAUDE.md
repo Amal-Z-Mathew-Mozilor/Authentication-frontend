@@ -114,8 +114,8 @@ frontend/src/
 | PUT | `/pulse/websites/:id` | `{ name, url }` (`404` if not owned) |
 | DELETE | `/pulse/websites/:id` | — (`404` if not owned) |
 | GET | `/pulse/websites/:id/cookie-policy` | — (`data.content` = `{ aboutCookies: {…}, useOfCookies: {…}, cookiePreferences: { heading, description }, effectiveDate }`) |
-| PUT | `/pulse/websites/:id/cookie-policy/:section` | `{ heading, description }` (`:section` = `aboutCookies`\|`useOfCookies`\|`cookiePreferences`; description = HTML; upserts, preserves siblings) |
-| PUT | `/pulse/websites/:id/cookie-policy` | `{ effectiveDate }` (base path; ISO `YYYY-MM-DD`; upserts policy meta, preserves sections) |
+| PUT | `/pulse/websites/:id/cookie-policy/:section` | `{ heading, description, usedImageIds? }` (`:section` = `aboutCookies`\|`useOfCookies`\|`cookiePreferences`; description = HTML; upserts, preserves siblings; `usedImageIds` = image ids live across all editors → orphan cleanup) |
+| PUT | `/pulse/websites/:id/cookie-policy` | `{ effectiveDate, usedImageIds? }` (base path; ISO `YYYY-MM-DD`; upserts policy meta, preserves sections) |
 | POST | `/pulse/websites/:id/images` | multipart `file` (png/jpg) → `{ data: { url } }` |
 | GET | `/pulse/images/:id` | — (public; returns the image binary) |
 
