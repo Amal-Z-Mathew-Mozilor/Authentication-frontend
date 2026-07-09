@@ -180,7 +180,7 @@ export default function CookiePolicyPage() {
   // Save the current section (+ effective date on the preferences tab). Returns true on a
   // clean save, false on validation/request failure. Shared by Save draft and Prev/Next.
   // `silent` suppresses the success toast (used by Back to Dashboard, which navigates away).
-  async function saveCurrent({ silent = false } = {}) {
+  async function saveCurrent({ silent = false, generate = false } = {}) {
     // Both fields are required — cannot save empty (matches CookieYes).
     const next = { heading: [], description: [] }
     if (!heading.trim()) next.heading.push('This field cannot be empty.')
@@ -232,6 +232,9 @@ export default function CookiePolicyPage() {
             body: JSON.stringify({
               effectiveDate: effectiveDate || todayISO(),
               usedImageIds: collectUsedImageIds(),
+              // Only the "Generate cookie policy" action marks the policy generated
+              // (server stamps generatedAt). Ordinary auto-saves omit this flag.
+              ...(generate ? { generated: true } : {}),
             }),
           },
         )
@@ -277,7 +280,7 @@ export default function CookiePolicyPage() {
   // Generate cookie policy (last step) — auto-save the current section (+ effective
   // date), then navigate to the read-only Policy Preview page only if it saved cleanly.
   async function handleGenerate() {
-    const ok = await saveCurrent()
+    const ok = await saveCurrent({ generate: true })
     if (ok) navigate(`/cookie-policy/${websiteId}/preview`)
   }
 

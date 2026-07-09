@@ -35,8 +35,34 @@ export default function WebManagerPage() {
   const [editErrors, setEditErrors] = useState(EMPTY)
   const [confirmId, setConfirmId] = useState(null)
   const [busyId, setBusyId] = useState(null)
+  const [openingId, setOpeningId] = useState(null) // website whose policy is being opened
 
   const toLoginOn = (res) => res.status === 401 || res.status === 403
+
+  // "Cookie policy" button: route to the read-only preview if the policy has
+  // already been generated (server-stamped content.generatedAt), otherwise to
+  // the wizard's first step. Falls back to the wizard on any error so the
+  // button is never dead.
+  async function openCookiePolicy(id) {
+    if (openingId) return
+    setOpeningId(id)
+    try {
+      const res = await apiFetch(`${BASE}/${id}/cookie-policy`, { method: 'GET' })
+      if (toLoginOn(res)) {
+        navigate('/login')
+        return
+      }
+      const data = await res.json().catch(() => ({}))
+      const generated = res.ok && data?.data?.content?.generatedAt
+      navigate(
+        generated ? `/cookie-policy/${id}/preview` : `/cookie-policy/${id}`,
+      )
+    } catch {
+      navigate(`/cookie-policy/${id}`)
+    } finally {
+      setOpeningId(null)
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -341,9 +367,10 @@ export default function WebManagerPage() {
                         <button
                           type="button"
                           className="btn-secondary"
-                          onClick={() => navigate(`/cookie-policy/${w.id}`)}
+                          onClick={() => openCookiePolicy(w.id)}
+                          disabled={openingId === w.id}
                         >
-                          Cookie policy
+                          {openingId === w.id ? 'Opening…' : 'Cookie policy'}
                         </button>
                         <button
                           type="button"
