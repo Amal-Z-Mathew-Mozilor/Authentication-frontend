@@ -978,6 +978,99 @@ input:focus {
   opacity: 0.55;
   cursor: not-allowed;
 }
+.cp-kebab:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--text);
+}
+/* 3-dots actions dropdown (Edit / Delete policy). */
+.cp-kebab-wrap {
+  position: relative;
+}
+.cp-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 180px;
+  padding: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(31, 39, 51, 0.18);
+  display: flex;
+  flex-direction: column;
+}
+.cp-menu-item {
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.cp-menu-item:hover {
+  background: var(--bg);
+}
+.cp-menu-item.danger {
+  color: var(--error);
+}
+/* Centered confirmation / result dialog (reuses .cp-modal-overlay). */
+.cp-dialog {
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(31, 39, 51, 0.28);
+  width: min(560px, 100%);
+  padding: 28px 30px 24px;
+}
+.cp-dialog h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+.cp-dialog p {
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.cp-dialog p strong {
+  color: var(--text);
+}
+.cp-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+/* Red destructive button — "Delete cookie policy". */
+.cp-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--error);
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  transition:
+    filter 0.15s,
+    opacity 0.15s;
+}
+.cp-btn-danger:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+.cp-btn-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 /* On the page (not a modal) the rendered policy sits in an outlined card. */
 .cp-preview-card {
   border: 1px solid var(--border);

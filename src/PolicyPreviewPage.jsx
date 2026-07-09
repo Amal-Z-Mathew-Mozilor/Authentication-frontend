@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Header from './Header.jsx'
 import PolicyDocument from './PolicyDocument.jsx'
@@ -21,6 +21,10 @@ export default function PolicyPreviewPage() {
   const [banner, setBanner] = useState(null)
   const [sections, setSections] = useState([])
   const [effectiveDate, setEffectiveDate] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [dialog, setDialog] = useState(null) // null | 'confirm' | 'deleted'
+  const [deleting, setDeleting] = useState(false)
+  const menuRef = useRef(null)
   // Success toast on arrival (matches CookieYes) — shown from first render,
   // auto-dismissed after ~4s by the effect below.
   const [toast, setToast] = useState({
@@ -33,6 +37,50 @@ export default function PolicyPreviewPage() {
     const t = setTimeout(() => setToast(null), 4000)
     return () => clearTimeout(t)
   }, [toast])
+
+  // Close the 3-dots actions menu on outside-click or Esc.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDown = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target))
+        setMenuOpen(false)
+    }
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
+
+  // Delete = reset the policy to defaults server-side, then show the "deleted" dialog.
+  async function handleDelete() {
+    setDeleting(true)
+    try {
+      const res = await apiFetch(`/pulse/websites/${websiteId}/cookie-policy`, {
+        method: 'DELETE',
+      })
+      if (res.status === 401 || res.status === 403) {
+        navigate('/login')
+        return
+      }
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        setBanner(d.message || 'Could not delete the cookie policy.')
+        setDialog(null)
+        return
+      }
+      setDialog('deleted')
+    } catch {
+      setBanner('Could not reach the server. Is the backend running on :8000?')
+      setDialog(null)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -200,26 +248,54 @@ export default function PolicyPreviewPage() {
               >
                 Add policy to site
               </button>
-              <button
-                type="button"
-                className="cp-kebab"
-                disabled
-                title="Coming soon"
-                aria-label="More options"
-                aria-disabled="true"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  fill="currentColor"
-                  aria-hidden="true"
+              <div className="cp-kebab-wrap" ref={menuRef}>
+                <button
+                  type="button"
+                  className="cp-kebab"
+                  aria-label="More options"
+                  aria-haspopup="true"
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((o) => !o)}
                 >
-                  <circle cx="12" cy="5" r="1.6" />
-                  <circle cx="12" cy="12" r="1.6" />
-                  <circle cx="12" cy="19" r="1.6" />
-                </svg>
-              </button>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="5" r="1.6" />
+                    <circle cx="12" cy="12" r="1.6" />
+                    <circle cx="12" cy="19" r="1.6" />
+                  </svg>
+                </button>
+                {menuOpen && (
+                  <div className="cp-menu" role="menu">
+                    <button
+                      type="button"
+                      className="cp-menu-item"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        navigate(`/cookie-policy/${websiteId}`)
+                      }}
+                    >
+                      Edit policy
+                    </button>
+                    <button
+                      type="button"
+                      className="cp-menu-item danger"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        setDialog('confirm')
+                      }}
+                    >
+                      Delete policy
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -266,6 +342,96 @@ export default function PolicyPreviewPage() {
             <polyline points="8 12 11 15 16 9" />
           </svg>
           <span>{toast.message}</span>
+        </div>
+      )}
+      {dialog === 'confirm' && (
+        <div
+          className="cp-modal-overlay"
+          onClick={() => !deleting && setDialog(null)}
+        >
+          <div
+            className="cp-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Delete cookie policy"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2>Are you sure you want to delete this policy?</h2>
+            <p>
+              This will permanently remove your cookie policy from{' '}
+              <strong>{url || 'this website'}</strong>. This action cannot be
+              undone.
+            </p>
+            <p>
+              If you&apos;re planning to create a new policy later, make sure to
+              replace the embed code on your site.
+            </p>
+            <div className="cp-dialog-actions">
+              <button
+                type="button"
+                className="cp-btn"
+                onClick={() => setDialog(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="cp-btn-danger"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                Delete cookie policy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {dialog === 'deleted' && (
+        <div className="cp-modal-overlay">
+          <div
+            className="cp-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Cookie policy deleted"
+          >
+            <h2>Your cookie policy is deleted</h2>
+            <p>
+              The cookie policy for <strong>{url || 'this website'}</strong> has
+              been deleted. You can start over and create a new policy at any
+              time.
+            </p>
+            <div className="cp-dialog-actions">
+              <button
+                type="button"
+                className="cp-btn"
+                onClick={() => navigate('/home')}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                Back to Dashboard
+              </button>
+              <button
+                type="button"
+                className="submit"
+                onClick={() => navigate(`/cookie-policy/${websiteId}`)}
+              >
+                Create new cookie policy
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
