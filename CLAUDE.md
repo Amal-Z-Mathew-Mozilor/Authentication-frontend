@@ -34,7 +34,7 @@ frontend/src/
 ├── apiFetch.js                 # fetch wrapper: token-rotation interceptor (see below)
 ├── Header.jsx                  # shared top bar (Pulse logo); optional "Web Manager" link + Account menu via <Header account />
 ├── WebManagerPage.jsx          # /web-manager — list/add/edit/delete websites (calls /pulse/websites)
-├── CookiePolicyPage.jsx        # /cookie-policy/:websiteId — section-aware editor (About cookies + Use of cookies + Cookie preferences; heading + rich-text description; effective-date picker on the preferences tab); Previous/Next wizard nav that auto-saves the current section then shows a green "Draft saved successfully!" toast
+├── CookiePolicyPage.jsx        # /cookie-policy/:websiteId — section-aware editor (About cookies + Use of cookies + Cookie preferences; heading + rich-text description; effective-date picker on the preferences tab); Previous/Next wizard nav that auto-saves the current section then shows a green "Draft saved successfully!" toast; top "Back to Dashboard" button silently saves the current section (saveCurrent({silent})) then navigates to /home (blocks on invalid)
 ├── RichTextDescription.jsx     # reusable Tiptap rich-text editor (toolbar, links, png/jpg image upload) for Description fields
 ├── DatePicker.jsx              # custom calendar date-picker (no UI library) for the effective-date field; ISO in/out
 ├── dateUtils.js                # local-date helpers (toISO/todayISO/parseISO/formatLong) shared by DatePicker + CookiePolicyPage

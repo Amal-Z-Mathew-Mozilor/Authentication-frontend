@@ -173,7 +173,8 @@ export default function CookiePolicyPage() {
 
   // Save the current section (+ effective date on the preferences tab). Returns true on a
   // clean save, false on validation/request failure. Shared by Save draft and Prev/Next.
-  async function saveCurrent() {
+  // `silent` suppresses the success toast (used by Back to Dashboard, which navigates away).
+  async function saveCurrent({ silent = false } = {}) {
     // Both fields are required — cannot save empty (matches CookieYes).
     const next = { heading: [], description: [] }
     if (!heading.trim()) next.heading.push('This field cannot be empty.')
@@ -238,7 +239,7 @@ export default function CookiePolicyPage() {
           return false
         }
       }
-      setToast({ message: 'Draft saved successfully!' })
+      if (!silent) setToast({ message: 'Draft saved successfully!' })
       return true
     } catch {
       setBanner('Could not reach the server. Is the backend running on :8000?')
@@ -253,6 +254,13 @@ export default function CookiePolicyPage() {
     await saveCurrent()
   }
 
+  // Back to Dashboard — silently save the current section (reusing Save-draft logic), then
+  // leave for /home only if it saved cleanly. Invalid section blocks navigation (shows errors).
+  async function handleBackToDashboard() {
+    const ok = await saveCurrent({ silent: true })
+    if (ok) navigate('/home')
+  }
+
   // Previous/Next — auto-save the current section, then move only if it saved cleanly.
   async function goTo(key) {
     if (!key) return
@@ -263,6 +271,30 @@ export default function CookiePolicyPage() {
   return (
     <div className="page">
       <Header account />
+      <div className="cp-topbar">
+        <button
+          type="button"
+          className="cp-btn cp-back"
+          onClick={handleBackToDashboard}
+          disabled={saving}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          Back to Dashboard
+        </button>
+      </div>
       <div className="cp-shell">
         <aside className="cp-side">
           <h2 className="cp-side-title">Cookie Policy</h2>

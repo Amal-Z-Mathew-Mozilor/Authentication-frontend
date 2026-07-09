@@ -659,6 +659,12 @@ input:focus {
 }
 
 /* ---- Cookie Policy editor ---- */
+/* Top strip above the editor split — holds the Back to Dashboard button. */
+.cp-topbar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+}
 .cp-shell {
   flex: 1;
   display: flex;
