@@ -82,6 +82,10 @@ export default function CookiePolicyPage() {
 
   const current = SECTIONS.find((s) => s.key === active)
   const idx = SECTIONS.findIndex((s) => s.key === active)
+  // Wizard progress follows the CURRENT step (so Previous moves it back):
+  // About 0% → Use 40% → Preferences 80%. 100% is reserved for the future
+  // "Generate cookie policy" step.
+  const pct = idx === 0 ? 0 : idx === 1 ? 40 : 80
   const prevKey = SECTIONS[idx - 1]?.key
   const nextKey = SECTIONS[idx + 1]?.key
   const sectionKey = current.sectionKey
@@ -343,6 +347,19 @@ export default function CookiePolicyPage() {
             </svg>
             Preview cookie policy
           </button>
+          <div className="cp-progress">
+            <p className="cp-progress-label">{pct}% complete</p>
+            <div
+              className="cp-progress-track"
+              role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Cookie policy completion"
+            >
+              <div className="cp-progress-fill" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
         </aside>
 
         <main className="cp-main">
