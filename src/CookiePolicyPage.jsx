@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Header from './Header.jsx'
 import RichTextDescription from './RichTextDescription.jsx'
 import DatePicker from './DatePicker.jsx'
+import PolicyPreview from './PolicyPreview.jsx'
 import { todayISO } from './dateUtils.js'
 import { apiFetch } from './apiFetch.js'
 import './signup.css'
@@ -70,6 +71,7 @@ export default function CookiePolicyPage() {
   const [banner, setBanner] = useState(null)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState(null)
+  const [showPreview, setShowPreview] = useState(false)
 
   // Auto-dismiss the success toast after ~4s (matches the app's other toasts).
   useEffect(() => {
@@ -318,6 +320,29 @@ export default function CookiePolicyPage() {
               </button>
             ))}
           </nav>
+          <button
+            type="button"
+            className="cp-preview-btn"
+            onClick={() => setShowPreview(true)}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="4" y="3" width="16" height="18" rx="2" />
+              <line x1="14" y1="3" x2="14" y2="21" />
+              <line x1="7" y1="8" x2="11" y2="8" />
+              <line x1="7" y1="12" x2="11" y2="12" />
+            </svg>
+            Preview cookie policy
+          </button>
         </aside>
 
         <main className="cp-main">
@@ -501,6 +526,17 @@ export default function CookiePolicyPage() {
           </svg>
           <span>{toast.message}</span>
         </div>
+      )}
+      {showPreview && (
+        <PolicyPreview
+          url={url}
+          sections={SECTIONS.map((s) => ({
+            sectionKey: s.sectionKey,
+            ...data[s.sectionKey],
+          }))}
+          effectiveDate={effectiveDate}
+          onClose={() => setShowPreview(false)}
+        />
       )}
     </div>
   )
