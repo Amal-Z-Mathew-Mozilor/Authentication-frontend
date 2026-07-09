@@ -22,6 +22,7 @@ export default function PolicyPreviewPage() {
   const [sections, setSections] = useState([])
   const [effectiveDate, setEffectiveDate] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false) // "Add policy to site" method-picker modal
   const [dialog, setDialog] = useState(null) // null | 'confirm' | 'deleted'
   const [deleting, setDeleting] = useState(false)
   const menuRef = useRef(null)
@@ -55,6 +56,21 @@ export default function PolicyPreviewPage() {
       document.removeEventListener('keydown', onKey)
     }
   }, [menuOpen])
+
+  // "Add policy to site" modal: close on Esc and lock body scroll while open.
+  useEffect(() => {
+    if (!addOpen) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setAddOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [addOpen])
 
   // Delete = reset the policy to defaults server-side, then show the "deleted" dialog.
   async function handleDelete() {
@@ -242,9 +258,8 @@ export default function PolicyPreviewPage() {
               <button
                 type="button"
                 className="cp-add-policy"
-                disabled
-                title="Coming soon"
-                aria-disabled="true"
+                aria-haspopup="dialog"
+                onClick={() => setAddOpen(true)}
               >
                 Add policy to site
               </button>
@@ -430,6 +445,61 @@ export default function PolicyPreviewPage() {
               >
                 Create new cookie policy
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {addOpen && (
+        <div className="cp-modal-overlay" onClick={() => setAddOpen(false)}>
+          <div
+            className="cp-add-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add cookie policy to your site"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="cp-modal-close cp-add-close"
+              aria-label="Close"
+              onClick={() => setAddOpen(false)}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            <div className="cp-add-head">
+              <h2>Add cookie policy to your site</h2>
+              <p className="cp-add-url">{url || 'this website'}</p>
+            </div>
+            <div className="cp-add-body">
+              <p className="cp-add-label">
+                Select your preferred method to add the policy
+              </p>
+              <div
+                className="cp-method-card is-disabled"
+                aria-disabled="true"
+              >
+                <div className="cp-method-title">
+                  <h3>HTML format</h3>
+                  <span className="cp-method-soon">Coming soon</span>
+                </div>
+                <p>
+                  Manually update the code on your site each time you modify the
+                  generated policy.
+                </p>
+              </div>
             </div>
           </div>
         </div>
