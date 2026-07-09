@@ -10,6 +10,7 @@ import VerifyEmailPage from './VerifyEmailPage.jsx'
 import ChangePasswordPage from './ChangePasswordPage.jsx'
 import WebManagerPage from './WebManagerPage.jsx'
 import CookiePolicyPage from './CookiePolicyPage.jsx'
+import PolicyPreviewPage from './PolicyPreviewPage.jsx'
 import VerifiedAlreadyPage from './VerifiedAlreadyPage.jsx'
 import VerificationExpiredPage from './VerificationExpiredPage.jsx'
 import VerificationInvalidPage from './VerificationInvalidPage.jsx'
@@ -29,6 +30,10 @@ function App() {
         <Route path="/verify/:token" element={<VerifyEmailPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/web-manager" element={<WebManagerPage />} />
+        <Route
+          path="/cookie-policy/:websiteId/preview"
+          element={<PolicyPreviewPage />}
+        />
         <Route
           path="/cookie-policy/:websiteId"
           element={<CookiePolicyPage />}

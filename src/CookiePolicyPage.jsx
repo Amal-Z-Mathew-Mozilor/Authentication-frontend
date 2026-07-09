@@ -274,8 +274,15 @@ export default function CookiePolicyPage() {
     if (ok) switchSection(key)
   }
 
+  // Generate cookie policy (last step) — auto-save the current section (+ effective
+  // date), then navigate to the read-only Policy Preview page only if it saved cleanly.
+  async function handleGenerate() {
+    const ok = await saveCurrent()
+    if (ok) navigate(`/cookie-policy/${websiteId}/preview`)
+  }
+
   return (
-    <div className="page">
+    <div className="page cp-page">
       <Header account />
       <div className="cp-topbar">
         <button
@@ -363,9 +370,10 @@ export default function CookiePolicyPage() {
         </aside>
 
         <main className="cp-main">
-          <h1 className="cp-title">{current.title}</h1>
+          <div className="cp-main-scroll">
+            <h1 className="cp-title">{current.title}</h1>
 
-          {banner && (
+            {banner && (
             <div className="banner" role="alert">
               {banner}
             </div>
@@ -461,8 +469,12 @@ export default function CookiePolicyPage() {
                   </p>
                 </div>
               )}
+            </>
+          )}
+          </div>
 
-              <div className="cp-actions">
+          {load !== 'loading' && (
+            <div className="cp-actions">
                 <button
                   type="button"
                   className="cp-btn cp-prev"
@@ -493,31 +505,41 @@ export default function CookiePolicyPage() {
                   >
                     Save draft
                   </button>
-                  <button
-                    type="button"
-                    className={`submit cp-next ${saving ? 'loading' : ''}`}
-                    onClick={() => goTo(nextKey)}
-                    disabled={saving || !nextKey}
-                  >
-                    Next
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="16"
-                      height="16"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
+                  {nextKey ? (
+                    <button
+                      type="button"
+                      className={`submit cp-next ${saving ? 'loading' : ''}`}
+                      onClick={() => goTo(nextKey)}
+                      disabled={saving}
                     >
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </button>
+                      Next
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`submit cp-generate ${saving ? 'loading' : ''}`}
+                      onClick={handleGenerate}
+                      disabled={saving}
+                    >
+                      Generate cookie policy
+                    </button>
+                  )}
                 </div>
               </div>
-            </>
-          )}
+            )}
         </main>
       </div>
       {toast && (
