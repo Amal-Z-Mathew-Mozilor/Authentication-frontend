@@ -207,8 +207,7 @@ export default function CookiePolicyPage() {
 
   // Save the current section (+ effective date on the preferences tab). Returns true on a
   // clean save, false on validation/request failure. Shared by Save draft and Prev/Next.
-  // `silent` suppresses the success toast (used by Back to Dashboard, which navigates away).
-  async function saveCurrent({ silent = false } = {}) {
+  async function saveCurrent() {
     // Both fields are required — cannot save empty (matches CookieYes).
     const next = { heading: [], description: [] }
     if (!heading.trim()) next.heading.push(EMPTY_MSG)
@@ -269,7 +268,7 @@ export default function CookiePolicyPage() {
           return false
         }
       }
-      if (!silent) setToast({ message: 'Draft saved successfully!' })
+      setToast({ message: 'Draft saved successfully!' })
       return true
     } catch {
       setBanner('Could not reach the server. Is the backend running on :8000?')
@@ -284,11 +283,11 @@ export default function CookiePolicyPage() {
     await saveCurrent()
   }
 
-  // Back to Dashboard — silently save the current section (reusing Save-draft logic), then
-  // leave for /home only if it saved cleanly. Invalid section blocks navigation (shows errors).
-  async function handleBackToDashboard() {
-    const ok = await saveCurrent({ silent: true })
-    if (ok) navigate('/home')
+  // Back to Dashboard — leave immediately without saving. Unsaved edits are discarded; the
+  // DB keeps the last-saved content, so returning re-loads that (never blocked by an empty
+  // field). Explicit saves (Save draft / Next) are the only ways edits persist.
+  function handleBackToDashboard() {
+    navigate('/home')
   }
 
   // Previous/Next — auto-save the current section, then move only if it saved cleanly.
