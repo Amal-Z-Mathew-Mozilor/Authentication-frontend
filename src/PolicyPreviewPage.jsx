@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Header from './Header.jsx'
 import PolicyDocument from './PolicyDocument.jsx'
@@ -24,6 +24,10 @@ export default function PolicyPreviewPage() {
   const [effectiveDate, setEffectiveDate] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false) // "Add policy to site" method-picker modal
+  const [addStep, setAddStep] = useState('method') // 'method' | 'html' (code view)
+  const [htmlCode, setHtmlCode] = useState(null) // fetched self-contained HTML snippet
+  const [htmlLoad, setHtmlLoad] = useState('idle') // idle | loading | ready | error
+  const [copied, setCopied] = useState(false)
   const [dialog, setDialog] = useState(null) // null | 'confirm' | 'deleted'
   const [deleting, setDeleting] = useState(false)
   const menuRef = useRef(null)
@@ -72,11 +76,21 @@ export default function PolicyPreviewPage() {
     }
   }, [menuOpen])
 
+  // Close the modal and reset it to the method step, dropping any fetched code so the
+  // next open starts clean (and re-fetches fresh HTML). Used by ✕/backdrop/Esc.
+  const closeAdd = useCallback(() => {
+    setAddOpen(false)
+    setAddStep('method')
+    setHtmlCode(null)
+    setHtmlLoad('idle')
+    setCopied(false)
+  }, [])
+
   // "Add policy to site" modal: close on Esc and lock body scroll while open.
   useEffect(() => {
     if (!addOpen) return
     const onKey = (e) => {
-      if (e.key === 'Escape') setAddOpen(false)
+      if (e.key === 'Escape') closeAdd()
     }
     document.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
@@ -85,7 +99,52 @@ export default function PolicyPreviewPage() {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prev
     }
-  }, [addOpen])
+  }, [addOpen, closeAdd])
+
+  useEffect(() => {
+    if (!copied) return
+    const t = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(t)
+  }, [copied])
+
+  // Fetch the self-contained HTML snippet for the "HTML format" option.
+  async function loadHtml() {
+    setHtmlLoad('loading')
+    try {
+      const res = await apiFetch(
+        `/pulse/websites/${websiteId}/cookie-policy/html`,
+        { method: 'GET' },
+      )
+      if (res.status === 401 || res.status === 403) {
+        navigate('/login')
+        return
+      }
+      if (!res.ok) {
+        setHtmlLoad('error')
+        return
+      }
+      const d = await res.json().catch(() => ({}))
+      setHtmlCode(d?.data?.html || '')
+      setHtmlLoad('ready')
+    } catch {
+      setHtmlLoad('error')
+    }
+  }
+
+  function openHtmlStep() {
+    setAddStep('html')
+    loadHtml()
+  }
+
+  async function handleCopy() {
+    if (htmlLoad !== 'ready' || !navigator.clipboard) return
+    try {
+      await navigator.clipboard.writeText(htmlCode || '')
+      setCopied(true)
+    } catch {
+      /* clipboard blocked — no-op */
+    }
+  }
 
   // Delete = reset the policy to defaults server-side, then show the "deleted" dialog.
   async function handleDelete() {
@@ -465,7 +524,7 @@ export default function PolicyPreviewPage() {
         </div>
       )}
       {addOpen && (
-        <div className="cp-modal-overlay" onClick={() => setAddOpen(false)}>
+        <div className="cp-modal-overlay" onClick={closeAdd}>
           <div
             className="cp-add-modal"
             role="dialog"
@@ -477,7 +536,7 @@ export default function PolicyPreviewPage() {
               type="button"
               className="cp-modal-close cp-add-close"
               aria-label="Close"
-              onClick={() => setAddOpen(false)}
+              onClick={closeAdd}
             >
               <svg
                 viewBox="0 0 24 24"
@@ -498,24 +557,114 @@ export default function PolicyPreviewPage() {
               <h2>Add cookie policy to your site</h2>
               <p className="cp-add-url">{url || 'this website'}</p>
             </div>
-            <div className="cp-add-body">
-              <p className="cp-add-label">
-                Select your preferred method to add the policy
-              </p>
-              <div
-                className="cp-method-card is-disabled"
-                aria-disabled="true"
-              >
-                <div className="cp-method-title">
-                  <h3>HTML format</h3>
-                  <span className="cp-method-soon">Coming soon</span>
+            {addStep === 'method' ? (
+              <div className="cp-add-body">
+                <p className="cp-add-label">
+                  Select your preferred method to add the policy
+                </p>
+                <button
+                  type="button"
+                  className="cp-method-card"
+                  onClick={openHtmlStep}
+                >
+                  <div className="cp-method-title">
+                    <h3>HTML format</h3>
+                  </div>
+                  <p>
+                    Manually update the code on your site each time you modify
+                    the generated policy.
+                  </p>
+                </button>
+              </div>
+            ) : (
+              <div className="cp-add-body">
+                <button
+                  type="button"
+                  className="cp-code-back"
+                  onClick={() => setAddStep('method')}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="15"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  Back
+                </button>
+                <p className="cp-step-label">
+                  <strong>Step 1:</strong> Copy this HTML code.
+                </p>
+                <textarea
+                  className="cp-code-box"
+                  readOnly
+                  value={
+                    htmlLoad === 'loading'
+                      ? 'Generating…'
+                      : htmlLoad === 'error'
+                        ? 'Could not generate the code.'
+                        : htmlCode || ''
+                  }
+                  onFocus={(e) => e.target.select()}
+                  aria-label="Cookie policy HTML code"
+                />
+                <div className="cp-code-actions">
+                  {htmlLoad === 'error' ? (
+                    <button
+                      type="button"
+                      className="cp-btn"
+                      onClick={loadHtml}
+                    >
+                      Retry
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="cp-btn"
+                      onClick={handleCopy}
+                      disabled={htmlLoad !== 'ready'}
+                    >
+                      {copied ? 'Copied!' : 'Copy code'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="cp-btn"
+                    disabled
+                    title="Coming soon"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <line x1="19" y1="8" x2="19" y2="14" />
+                      <line x1="22" y1="11" x2="16" y2="11" />
+                    </svg>
+                    Send code to a teammate
+                  </button>
                 </div>
-                <p>
-                  Manually update the code on your site each time you modify the
-                  generated policy.
+                <p className="cp-step-label">
+                  <strong>Step 2:</strong> Paste the copied code into the
+                  required page on your website.
                 </p>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
