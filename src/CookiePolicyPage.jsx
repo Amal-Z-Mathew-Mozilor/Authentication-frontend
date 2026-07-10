@@ -281,7 +281,12 @@ export default function CookiePolicyPage() {
   // date), then navigate to the read-only Policy Preview page only if it saved cleanly.
   async function handleGenerate() {
     const ok = await saveCurrent({ generate: true })
-    if (ok) navigate(`/cookie-policy/${websiteId}/preview`)
+    // Signal the preview's success toast — shown on every Generate-button click,
+    // but NOT on a returning user's visit from Web Manager (which passes no state).
+    if (ok)
+      navigate(`/cookie-policy/${websiteId}/preview`, {
+        state: { justGenerated: true },
+      })
   }
 
   return (

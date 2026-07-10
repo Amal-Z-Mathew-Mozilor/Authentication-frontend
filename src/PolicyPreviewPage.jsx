@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import Header from './Header.jsx'
 import PolicyDocument from './PolicyDocument.jsx'
 import { apiFetch } from './apiFetch.js'
@@ -15,6 +15,7 @@ const SECTION_KEYS = ['aboutCookies', 'useOfCookies', 'cookiePreferences']
 export default function PolicyPreviewPage() {
   const { websiteId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [url, setUrl] = useState('')
   const [load, setLoad] = useState('loading') // loading | ready | error
@@ -26,12 +27,26 @@ export default function PolicyPreviewPage() {
   const [dialog, setDialog] = useState(null) // null | 'confirm' | 'deleted'
   const [deleting, setDeleting] = useState(false)
   const menuRef = useRef(null)
-  // Success toast on arrival (matches CookieYes) — shown from first render,
-  // auto-dismissed after ~4s by the effect below.
-  const [toast, setToast] = useState({
-    message:
-      'Your edits to the cookie policy have been saved. Now, add it to your website.',
-  })
+  // Success toast — shown ONLY when arriving from the wizard's "Generate cookie
+  // policy" button on the FIRST generation (signalled via navigation state). A
+  // returning user routed here from Web Manager, or a re-generation, sends no
+  // flag, so no toast. Auto-dismissed after ~4s by the effect below.
+  const [toast, setToast] = useState(
+    location.state?.justGenerated
+      ? {
+          message:
+            'Your edits to the cookie policy have been saved. Now, add it to your website.',
+        }
+      : null,
+  )
+
+  // Clear the navigation state so refreshing/going back doesn't replay the toast.
+  useEffect(() => {
+    if (location.state?.justGenerated) {
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!toast) return

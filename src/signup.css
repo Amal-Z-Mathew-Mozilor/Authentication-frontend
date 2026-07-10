@@ -400,13 +400,13 @@ input:focus {
   font-size: 13px;
   font-weight: 700;
 }
-/* Success variant — solid pale-green fill, anchored top-right, outlined check icon
+/* Success variant — solid pale-green fill, anchored top-center, outlined check icon
    (e.g. "Draft saved successfully!"). No left accent bar. */
 .toast.toast-success {
   top: 88px;
-  left: auto;
-  right: 22px;
-  transform: none;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
   gap: 12px;
   padding: 16px 22px;
   background: #c9e9db;
@@ -414,7 +414,7 @@ input:focus {
   color: var(--text);
   font-size: 15px;
   font-weight: 500;
-  animation: toast-in-right 0.25s ease;
+  animation: toast-in 0.25s ease;
 }
 .toast-success .toast-check {
   flex: none;
