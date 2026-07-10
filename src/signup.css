@@ -1318,6 +1318,15 @@ button.cp-method-card:hover {
   border-top: 1px solid var(--border);
   background: var(--card);
 }
+/* Why the Generate button is disabled (any section still empty). */
+.cp-generate-hint {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 10px 40px 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: right;
+}
 /* Previous sits left; Save draft + Next are pushed to the right. */
 .cp-actions-right {
   margin-left: auto;

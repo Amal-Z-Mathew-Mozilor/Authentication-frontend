@@ -118,6 +118,16 @@ export default function CookiePolicyPage() {
       setErrors((p) => ({ ...p, description: [EMPTY_MSG] }))
   }
 
+  // A section is complete when both required fields have content. Computed from the live
+  // `data` (all sections), so the Generate gate reflects unsaved edits on any tab —
+  // CookieYes disables Generate while any section field is empty.
+  const isSectionComplete = (s) =>
+    data[s.sectionKey].heading.trim() && !descIsEmpty(data[s.sectionKey].description)
+  const incompleteSections = SECTIONS.filter(
+    (s) => s.active && !isSectionComplete(s),
+  )
+  const canGenerate = incompleteSections.length === 0
+
   useEffect(() => {
     let active = true
     async function loadAll() {
@@ -198,7 +208,7 @@ export default function CookiePolicyPage() {
   // Save the current section (+ effective date on the preferences tab). Returns true on a
   // clean save, false on validation/request failure. Shared by Save draft and Prev/Next.
   // `silent` suppresses the success toast (used by Back to Dashboard, which navigates away).
-  async function saveCurrent({ silent = false, generate = false } = {}) {
+  async function saveCurrent({ silent = false } = {}) {
     // Both fields are required — cannot save empty (matches CookieYes).
     const next = { heading: [], description: [] }
     if (!heading.trim()) next.heading.push(EMPTY_MSG)
@@ -246,9 +256,6 @@ export default function CookiePolicyPage() {
             body: JSON.stringify({
               effectiveDate: effectiveDate || todayISO(),
               usedImageIds: collectUsedImageIds(),
-              // Only the "Generate cookie policy" action marks the policy generated
-              // (server stamps generatedAt). Ordinary auto-saves omit this flag.
-              ...(generate ? { generated: true } : {}),
             }),
           },
         )
@@ -291,16 +298,79 @@ export default function CookiePolicyPage() {
     if (ok) switchSection(key)
   }
 
-  // Generate cookie policy (last step) — auto-save the current section (+ effective
-  // date), then navigate to the read-only Policy Preview page only if it saved cleanly.
+  // Persist EVERY section. Sidebar jumps don't auto-save, so saving only the current
+  // section (as Next does) could drop edits made on other tabs — save them all before
+  // generating so the preview reflects the full editor state. Returns true iff all save.
+  async function saveAllSections() {
+    const usedImageIds = collectUsedImageIds()
+    for (const s of SECTIONS) {
+      if (!s.active) continue
+      const sec = data[s.sectionKey]
+      const res = await apiFetch(
+        `/pulse/websites/${websiteId}/cookie-policy/${s.sectionKey}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            heading: sec.heading,
+            description: sec.description,
+            usedImageIds,
+          }),
+        },
+      )
+      if (res.status === 401 || res.status === 403) {
+        navigate('/login')
+        return false
+      }
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        setBanner(d.message || 'Could not save all sections.')
+        return false
+      }
+    }
+    return true
+  }
+
+  // Generate cookie policy (last step) — gated on every section being complete. Persist
+  // all sections, stamp the policy generated, then navigate to the read-only preview.
   async function handleGenerate() {
-    const ok = await saveCurrent({ generate: true })
-    // Signal the preview's success toast — shown on every Generate-button click,
-    // but NOT on a returning user's visit from Web Manager (which passes no state).
-    if (ok)
+    if (!canGenerate) return
+    setErrors(EMPTY)
+    setBanner(null)
+    setSaving(true)
+    try {
+      if (!(await saveAllSections())) return
+      const genRes = await apiFetch(
+        `/pulse/websites/${websiteId}/cookie-policy`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            effectiveDate: effectiveDate || todayISO(),
+            usedImageIds: collectUsedImageIds(),
+            generated: true,
+          }),
+        },
+      )
+      if (genRes.status === 401 || genRes.status === 403) {
+        navigate('/login')
+        return
+      }
+      if (!genRes.ok) {
+        const d = await genRes.json().catch(() => ({}))
+        setBanner(d.message || 'Could not generate the cookie policy.')
+        return
+      }
+      // Signal the preview's success toast — shown on every Generate-button click,
+      // but NOT on a returning user's visit from Web Manager (which passes no state).
       navigate(`/cookie-policy/${websiteId}/preview`, {
         state: { justGenerated: true },
       })
+    } catch {
+      setBanner('Could not reach the server. Is the backend running on :8000?')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -506,6 +576,12 @@ export default function CookiePolicyPage() {
           )}
           </div>
 
+          {load !== 'loading' && !nextKey && !canGenerate && (
+            <p className="cp-generate-hint">
+              Complete all sections to generate:{' '}
+              {incompleteSections.map((s) => s.label).join(', ')}
+            </p>
+          )}
           {load !== 'loading' && (
             <div className="cp-actions">
                 <button
@@ -565,7 +641,14 @@ export default function CookiePolicyPage() {
                       type="button"
                       className={`submit cp-generate ${saving ? 'loading' : ''}`}
                       onClick={handleGenerate}
-                      disabled={saving}
+                      disabled={saving || !canGenerate}
+                      title={
+                        !canGenerate
+                          ? `Complete all sections to generate: ${incompleteSections
+                              .map((s) => s.label)
+                              .join(', ')}`
+                          : undefined
+                      }
                     >
                       Generate cookie policy
                     </button>
