@@ -24,10 +24,14 @@ export default function PolicyPreviewPage() {
   const [effectiveDate, setEffectiveDate] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false) // "Add policy to site" method-picker modal
-  const [addStep, setAddStep] = useState('method') // 'method' | 'html' (code view)
+  const [addStep, setAddStep] = useState('method') // 'method' | 'html' | 'send' | 'sent'
   const [htmlCode, setHtmlCode] = useState(null) // fetched self-contained HTML snippet
   const [htmlLoad, setHtmlLoad] = useState('idle') // idle | loading | ready | error
   const [copied, setCopied] = useState(false)
+  const [teamEmail, setTeamEmail] = useState('') // "Send code to a teammate" recipient
+  const [sentTo, setSentTo] = useState('') // email shown on the success step
+  const [sendState, setSendState] = useState('idle') // idle | sending | error
+  const [sendError, setSendError] = useState(null) // inline field/banner error
   const [dialog, setDialog] = useState(null) // null | 'confirm' | 'deleted'
   const [deleting, setDeleting] = useState(false)
   const menuRef = useRef(null)
@@ -84,6 +88,10 @@ export default function PolicyPreviewPage() {
     setHtmlCode(null)
     setHtmlLoad('idle')
     setCopied(false)
+    setTeamEmail('')
+    setSentTo('')
+    setSendState('idle')
+    setSendError(null)
   }, [])
 
   // "Add policy to site" modal: close on Esc and lock body scroll while open.
@@ -143,6 +151,46 @@ export default function PolicyPreviewPage() {
       setCopied(true)
     } catch {
       /* clipboard blocked — no-op */
+    }
+  }
+
+  // Send the install snippet to a teammate. Client guard: email must be non-empty
+  // (backend is the source of truth for format → 422 shown inline).
+  async function handleSendCode(e) {
+    e.preventDefault()
+    if (!teamEmail.trim()) {
+      setSendError('Email address is required.')
+      return
+    }
+    setSendError(null)
+    setSendState('sending')
+    try {
+      const res = await apiFetch(
+        `/pulse/websites/${websiteId}/cookie-policy/send-code`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: teamEmail.trim() }),
+        },
+      )
+      if (res.status === 401 || res.status === 403) {
+        navigate('/login')
+        return
+      }
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setSendState('error')
+        if (res.status === 422)
+          setSendError(d?.errors?.[0]?.msg || 'Invalid email address.')
+        else setSendError(d.message || 'Could not send the email.')
+        return
+      }
+      setSentTo(teamEmail.trim())
+      setSendState('idle')
+      setAddStep('sent')
+    } catch {
+      setSendState('error')
+      setSendError('Could not reach the server. Is the backend running on :8000?')
     }
   }
 
@@ -553,11 +601,13 @@ export default function PolicyPreviewPage() {
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
-            <div className="cp-add-head">
-              <h2>Add cookie policy to your site</h2>
-              <p className="cp-add-url">{url || 'this website'}</p>
-            </div>
-            {addStep === 'method' ? (
+            {(addStep === 'method' || addStep === 'html') && (
+              <div className="cp-add-head">
+                <h2>Add cookie policy to your site</h2>
+                <p className="cp-add-url">{url || 'this website'}</p>
+              </div>
+            )}
+            {addStep === 'method' && (
               <div className="cp-add-body">
                 <p className="cp-add-label">
                   Select your preferred method to add the policy
@@ -576,7 +626,8 @@ export default function PolicyPreviewPage() {
                   </p>
                 </button>
               </div>
-            ) : (
+            )}
+            {addStep === 'html' && (
               <div className="cp-add-body">
                 <button
                   type="button"
@@ -637,8 +688,7 @@ export default function PolicyPreviewPage() {
                   <button
                     type="button"
                     className="cp-btn"
-                    disabled
-                    title="Coming soon"
+                    onClick={() => setAddStep('send')}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -663,6 +713,99 @@ export default function PolicyPreviewPage() {
                   <strong>Step 2:</strong> Paste the copied code into the
                   required page on your website.
                 </p>
+              </div>
+            )}
+            {addStep === 'send' && (
+              <div className="cp-add-body">
+                <button
+                  type="button"
+                  className="cp-code-back"
+                  onClick={() => setAddStep('html')}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="15"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  Back
+                </button>
+                <div className="cp-add-head cp-send-head">
+                  <h2>Send installation code to your teammate</h2>
+                  <p className="cp-add-url">
+                    Your teammate will receive an email with the policy
+                    installation code and instructions to set it up.
+                  </p>
+                </div>
+                <form onSubmit={handleSendCode} className="cp-send-form">
+                  <div className={`field ${sendError ? 'invalid' : ''}`}>
+                    <label className="label" htmlFor="cp-team-email">
+                      <span>
+                        Email address <span className="cp-req">*</span>
+                      </span>
+                    </label>
+                    <div className="input-row">
+                      <input
+                        id="cp-team-email"
+                        type="email"
+                        placeholder="email@domain.com"
+                        value={teamEmail}
+                        onChange={(e) => {
+                          setTeamEmail(e.target.value)
+                          if (sendError) setSendError(null)
+                        }}
+                        autoFocus
+                      />
+                    </div>
+                    {sendError && (
+                      <ul className="errlist" role="alert">
+                        <li>{sendError}</li>
+                      </ul>
+                    )}
+                  </div>
+                  <button
+                    type="submit"
+                    className="submit cp-send-submit"
+                    disabled={sendState === 'sending'}
+                  >
+                    {sendState === 'sending' ? 'Sending…' : 'Send email'}
+                  </button>
+                </form>
+              </div>
+            )}
+            {addStep === 'sent' && (
+              <div className="cp-add-body cp-sent">
+                <svg
+                  className="cp-sent-check"
+                  viewBox="0 0 24 24"
+                  width="72"
+                  height="72"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="8 12 11 15 16 9" />
+                </svg>
+                <h2>Installation code sent successfully!</h2>
+                <p>
+                  Your teammate ({sentTo}) will receive the installation code
+                  and instructions shortly to complete the installation process.
+                </p>
+                <button type="button" className="submit" onClick={closeAdd}>
+                  Okay
+                </button>
               </div>
             )}
           </div>

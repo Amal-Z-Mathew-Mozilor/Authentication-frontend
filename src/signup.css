@@ -1112,6 +1112,42 @@ button.cp-method-card:hover {
   gap: 12px;
   margin-top: 14px;
 }
+/* "Send code to a teammate" step. */
+.cp-send-head {
+  text-align: left;
+  margin: 6px 0 20px;
+}
+.cp-send-head .cp-add-url {
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.cp-req {
+  color: var(--error);
+}
+.cp-send-submit {
+  margin-top: 4px;
+}
+/* Success step ("Installation code sent successfully!"). */
+.cp-sent {
+  text-align: center;
+  padding-top: 8px;
+}
+.cp-sent-check {
+  color: var(--ok);
+  margin: 6px auto 14px;
+}
+.cp-sent h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+.cp-sent p {
+  margin: 0 0 22px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+}
 .cp-kebab {
   display: inline-flex;
   align-items: center;
