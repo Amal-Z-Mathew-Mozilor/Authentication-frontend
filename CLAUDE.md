@@ -38,7 +38,7 @@ frontend/src/
 ├── PolicyPreviewPage.jsx       # /cookie-policy/:websiteId/preview — read-only Policy Preview page (final "Generate" step): loads SAVED content; sidebar = title + "Generating cookie policy for <url>" + amber Disclaimer + "Edit cookie policy" (→ /cookie-policy/:websiteId, About step) + static 100% progress; main = "Policy preview" header with an "Add policy to site" button (opens the "Add cookie policy to your site" method-picker modal — a single ACTIVE "HTML format" card that opens a two-step code view: fetches the self-contained snippet from `GET …/cookie-policy/html`, shows "Step 1: Copy this HTML code" + a read-only code box + a working "Copy code" button + an ACTIVE "Send code to a teammate" button + "Step 2: Paste…"; "Send code to a teammate" opens a `send` step (required email field → `POST …/cookie-policy/send-code`) then a `sent` success step ("Installation code sent successfully!" + Okay); Back returns to the picker, no language selector; ✕/backdrop/Esc/Okay close AND reset to the picker, locks body scroll) + an ACTIVE 3-dots kebab menu → "Edit policy" (→ wizard About step) / "Delete policy" (→ confirm modal → DELETE cookie-policy [reset] → "Your cookie policy is deleted" modal w/ Back to Dashboard [/home] + Create new cookie policy [→ wizard]); the composed policy (via PolicyDocument); a top-center green success toast shown ONLY when arriving from the wizard's "Generate cookie policy" button (via `location.state.justGenerated`, cleared on mount so refresh/back won't replay it) — NOT on a returning user's Web-Manager visit
 ├── PolicyDocument.jsx          # shared rendered-policy body (title, effective/last-updated dates, each non-empty section's heading + rich-text HTML, site-url footer) — used by BOTH PolicyPreview (modal) and PolicyPreviewPage; renders description HTML via dangerouslySetInnerHTML (user's own Tiptap output)
 ├── PolicyPreview.jsx           # "Policy preview" modal — wraps PolicyDocument to render the composed policy from LIVE editor state incl. unsaved edits; closes on ✕/backdrop/Esc, locks body scroll; frontend-only (no endpoint)
-├── RichTextDescription.jsx     # reusable Tiptap rich-text editor (toolbar, links, png/jpg image upload) for Description fields
+├── RichTextDescription.jsx     # reusable Tiptap rich-text editor (toolbar, links, png/jpg image upload) for Description fields; optional `onBlur` prop (wired to Tiptap's editor blur) for focus-out validation
 ├── DatePicker.jsx              # custom calendar date-picker (no UI library) for the effective-date field; ISO in/out
 ├── dateUtils.js                # local-date helpers (toISO/todayISO/parseISO/formatLong) shared by DatePicker + CookiePolicyPage
 ├── LandingNav.jsx / Footer.jsx # landing-page chrome
@@ -75,8 +75,11 @@ frontend/src/
 - **Validation is backend-driven.** Pages generally submit as-is and render the backend's
   errors (`422` field errors inline, other messages in a banner/toast) rather than replicating
   rules client-side. Exceptions: a client-side **password-required** guard on login (an empty
-  password would burn a lockout attempt), and the signup password **policy checklist** (a live
-  UX hint mirroring `PASSWORD_RULES`).
+  password would burn a lockout attempt), the signup password **policy checklist** (a live
+  UX hint mirroring `PASSWORD_RULES`), and the cookie-policy wizard's **required-field**
+  check (Heading/Description show "This field cannot be empty." inline — on blur and the
+  moment the field is erased to empty; the backend still allows empty for partial drafts,
+  so this is a wizard-flow UX guard, not the integrity boundary).
 - Reuse `signup.css` classes (`.page`, `.card`, `.field`, `.input-row`, `.submit`, `.errlist`,
   `.banner`, `.toast`, `.success`, `.alt-link`, `.policy`) and the shared `<Header>` — don't
   invent parallel styles.

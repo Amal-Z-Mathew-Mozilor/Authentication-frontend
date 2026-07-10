@@ -100,6 +100,7 @@ const icons = {
 export default function RichTextDescription({
   value = '',
   onChange,
+  onBlur,
   placeholder = '',
   disabled = false,
   maxLength,
@@ -123,6 +124,10 @@ export default function RichTextDescription({
     content: value || '',
     onUpdate: ({ editor }) => {
       onChange?.(editor.isEmpty ? '' : editor.getHTML())
+    },
+    // Focus-out of the editor — lets the parent validate the Description on blur.
+    onBlur: () => {
+      onBlur?.()
     },
     editorProps: {
       // Toggle the link bubble on click: on when a link was clicked, off otherwise.

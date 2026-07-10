@@ -9,6 +9,12 @@ import { apiFetch } from './apiFetch.js'
 import './signup.css'
 
 const EMPTY = { heading: [], description: [] }
+// Required-field message — shared by saveCurrent (navigation gate) and the on-blur
+// handlers so the two paths never disagree on the wording.
+const EMPTY_MSG = 'This field cannot be empty.'
+// A rich-text value counts as empty when it has no visible text (strip tags + &nbsp;).
+const descIsEmpty = (html) =>
+  (html || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim().length === 0
 
 // Sidebar sections. `sectionKey` is the key in the cookie_policy.content jsonb / the
 // PUT `:section` path param. "Cookie preferences" is not built yet (disabled).
@@ -100,6 +106,18 @@ export default function CookiePolicyPage() {
       [sectionKey]: { ...p[sectionKey], description: v },
     }))
 
+  // On-blur required-field validation (matches CookieYes): flag a field the moment it's
+  // left empty, not only on navigation. Only ever sets the just-left field's error (never
+  // the sibling); typing clears it via the inputs' onChange. saveCurrent stays the final
+  // gate on navigation.
+  const onHeadingBlur = () => {
+    if (!heading.trim()) setErrors((p) => ({ ...p, heading: [EMPTY_MSG] }))
+  }
+  const onDescriptionBlur = () => {
+    if (descIsEmpty(description))
+      setErrors((p) => ({ ...p, description: [EMPTY_MSG] }))
+  }
+
   useEffect(() => {
     let active = true
     async function loadAll() {
@@ -183,12 +201,8 @@ export default function CookiePolicyPage() {
   async function saveCurrent({ silent = false, generate = false } = {}) {
     // Both fields are required — cannot save empty (matches CookieYes).
     const next = { heading: [], description: [] }
-    if (!heading.trim()) next.heading.push('This field cannot be empty.')
-    const descText = (description || '')
-      .replace(/<[^>]*>/g, '')
-      .replace(/&nbsp;/gi, ' ')
-      .trim()
-    if (!descText) next.description.push('This field cannot be empty.')
+    if (!heading.trim()) next.heading.push(EMPTY_MSG)
+    if (descIsEmpty(description)) next.description.push(EMPTY_MSG)
     if (next.heading.length || next.description.length) {
       setErrors(next)
       setBanner(null)
@@ -401,10 +415,16 @@ export default function CookiePolicyPage() {
                     type="text"
                     value={heading}
                     onChange={(e) => {
-                      setHeading(e.target.value)
-                      if (errors.heading.length)
-                        setErrors((p) => ({ ...p, heading: [] }))
+                      const v = e.target.value
+                      setHeading(v)
+                      // Flag the moment it becomes empty (e.g. erased) and clear as soon
+                      // as there's text — no waiting for blur.
+                      setErrors((p) => ({
+                        ...p,
+                        heading: v.trim() ? [] : [EMPTY_MSG],
+                      }))
                     }}
+                    onBlur={onHeadingBlur}
                     placeholder={current.headingPlaceholder}
                   />
                 </div>
@@ -428,9 +448,14 @@ export default function CookiePolicyPage() {
                   value={description}
                   onChange={(html) => {
                     setDescription(html)
-                    if (errors.description.length)
-                      setErrors((p) => ({ ...p, description: [] }))
+                    // Flag the moment it becomes empty (e.g. erased) and clear as soon as
+                    // there's text — no waiting for blur.
+                    setErrors((p) => ({
+                      ...p,
+                      description: descIsEmpty(html) ? [EMPTY_MSG] : [],
+                    }))
                   }}
+                  onBlur={onDescriptionBlur}
                   onImageUpload={async (file) => {
                     const fd = new FormData()
                     fd.append('file', file)
