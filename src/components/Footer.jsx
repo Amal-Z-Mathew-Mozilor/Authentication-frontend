@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom'
 
+/**
+ * Landing-page footer with brand blurb, social links, and quick-link columns.
+ * @returns {JSX.Element}
+ */
 export default function Footer() {
   return (
     <footer className="lfooter" id="contact">

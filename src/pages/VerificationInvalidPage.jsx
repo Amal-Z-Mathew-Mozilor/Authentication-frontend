@@ -1,6 +1,10 @@
-import Header from './Header.jsx'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import '../styles/signup.css'
 
+/**
+ * /verification-invalid status page — tells the user the verification link is invalid and to sign up again.
+ * @returns {JSX.Element}
+ */
 export default function VerificationInvalidPage() {
   return (
     <div className="page">

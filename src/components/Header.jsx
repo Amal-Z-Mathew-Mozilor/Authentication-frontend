@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { apiFetch } from './apiFetch.js'
+import { apiFetch } from '../lib/apiFetch.js'
 
+/**
+ * Shared top bar with the Pulse logo (links to "/").
+ * @param {object} props
+ * @param {boolean} [props.account] - When set, renders the "Web Manager" link + Account menu.
+ * @returns {JSX.Element}
+ */
 export default function Header({ account = false }) {
   const navigate = useNavigate()
   return (
@@ -31,6 +37,11 @@ export default function Header({ account = false }) {
   )
 }
 
+/**
+ * Account dropdown with Change password / Logout, closing on outside click.
+ * Logout POSTs /pulse/users/logout then navigates to "/" (redirects even on failure).
+ * @returns {JSX.Element}
+ */
 function AccountMenu() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)

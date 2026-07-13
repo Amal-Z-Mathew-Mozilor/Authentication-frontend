@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import Header from './Header.jsx'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import '../styles/signup.css'
 
+/**
+ * /verify/:token page — POSTs to /pulse/users/verifyEmail/:token on mount and routes by result:
+ * 200 → /home, 401 expired → /verification-expired/:token, 401 used → /already-verified,
+ * 403 → /verification-invalid; otherwise renders an inline verification-failed message.
+ * @returns {JSX.Element}
+ */
 export default function VerifyEmailPage() {
   const { token } = useParams()
   const navigate = useNavigate()

@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Header from './Header.jsx'
-import { apiFetch } from './apiFetch.js'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import { apiFetch } from '../lib/apiFetch.js'
+import '../styles/signup.css'
 
 const BASE = '/pulse/websites'
 const EMPTY = { name: [], url: [] }
 
-// group a 422 errors array (from express-validator) by field path
+/**
+ * Group a 422 express-validator errors array into per-field message lists.
+ * @param {Array<{path: string, msg: string}>} errorsArr - The errors array from a 422 response.
+ * @returns {{name: string[], url: string[]}} Messages keyed by the "name" and "url" field paths.
+ */
 function group422(errorsArr) {
   const g = { name: [], url: [] }
   if (Array.isArray(errorsArr)) {
@@ -16,6 +20,10 @@ function group422(errorsArr) {
   return g
 }
 
+/**
+ * /web-manager page — lists the user's websites from /pulse/websites and supports add (POST), edit (PUT), and delete (DELETE), redirecting to /login on 401/403; each row's "Cookie policy" button fetches the policy and navigates to the read-only preview when content.generatedAt is set, otherwise to the wizard's first step.
+ * @returns {JSX.Element}
+ */
 export default function WebManagerPage() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
@@ -47,7 +55,9 @@ export default function WebManagerPage() {
     if (openingId) return
     setOpeningId(id)
     try {
-      const res = await apiFetch(`${BASE}/${id}/cookie-policy`, { method: 'GET' })
+      const res = await apiFetch(`${BASE}/${id}/cookie-policy`, {
+        method: 'GET',
+      })
       if (toLoginOn(res)) {
         navigate('/login')
         return
@@ -84,7 +94,9 @@ export default function WebManagerPage() {
         }
       } catch {
         if (active) {
-          setBanner('Could not reach the server. Is the backend running on :8000?')
+          setBanner(
+            'Could not reach the server. Is the backend running on :8000?',
+          )
           setLoad('error')
         }
       }
@@ -198,8 +210,8 @@ export default function WebManagerPage() {
         <div className="wm">
           <h1 className="title">Web Manager</h1>
           <p className="subtitle">
-            Register the websites you manage. You'll attach a cookie policy to each
-            one later.
+            Register the websites you manage. You'll attach a cookie policy to
+            each one later.
           </p>
 
           {banner && (
@@ -335,8 +347,8 @@ export default function WebManagerPage() {
                   ) : confirmId === w.id ? (
                     <div className="wm-confirm">
                       <span className="wm-confirm-text">
-                        Delete <strong>{w.name}</strong>? This will also remove its
-                        cookie policy.
+                        Delete <strong>{w.name}</strong>? This will also remove
+                        its cookie policy.
                       </span>
                       <div className="wm-actions">
                         <button

@@ -1,16 +1,31 @@
-import { formatLong, todayISO } from './dateUtils.js'
+import { formatLong, todayISO } from '../lib/dateUtils.js'
 
 // Shared rendered-policy body — the cookie policy as it would appear on a real
 // page (assignment §2.4). Used by both the PolicyPreview modal and the
 // PolicyPreviewPage so the two renderings never drift.
 // `sections` = ordered [{ sectionKey, heading, description }]; description is the
 // editor's own Tiptap HTML, so injecting it keeps the same trust boundary.
+/**
+ * Report whether an HTML string has any visible text once tags and &nbsp; are stripped.
+ * @param {string} html - Rich-text HTML (e.g. a section's Tiptap description).
+ * @returns {boolean} True if non-whitespace text remains.
+ */
 const hasText = (html) =>
   (html || '')
     .replace(/<[^>]*>/g, '')
     .replace(/&nbsp;/gi, ' ')
     .trim().length > 0
 
+/**
+ * Shared rendered cookie-policy body (title, dates, each non-empty section, site-url footer).
+ * Injects each section's description HTML via dangerouslySetInnerHTML (the editor's own Tiptap output).
+ * @param {object} props
+ * @param {string} [props.url] - Site URL shown in the footer (falls back to "this website").
+ * @param {Array<{ sectionKey: string, heading: string, description: string }>} props.sections - Ordered policy sections.
+ * @param {string} [props.effectiveDate] - Effective date as ISO "YYYY-MM-DD" (defaults to today).
+ * @param {string} [props.lastUpdated] - Last-edit timestamp (cookie_policy.updatedAt); sliced to a date, defaults to today.
+ * @returns {JSX.Element}
+ */
 export default function PolicyDocument({
   url,
   sections,

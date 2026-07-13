@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
+/**
+ * Landing-page top navigation with a mobile burger toggle and section/auth links.
+ * @returns {JSX.Element}
+ */
 export default function LandingNav() {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)

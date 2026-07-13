@@ -24,6 +24,11 @@ const ResizableImage = Image.extend({
 })
 
 // Inline SVG icons (project uses no icon package). currentColor so CSS controls color.
+/**
+ * Wrap toolbar icon paths in a stroked 24x24 <svg> (currentColor, no fill).
+ * @param {JSX.Element} children - The <path>/<line>/etc. shapes for the icon.
+ * @returns {JSX.Element}
+ */
 const SVG = (children) => (
   <svg
     viewBox="0 0 24 24"
@@ -97,6 +102,18 @@ const icons = {
   ),
 }
 
+/**
+ * Tiptap rich-text editor for Description fields (toolbar, inline link bar, png/jpg upload).
+ * @param {object} props
+ * @param {string} [props.value] - Current HTML value (round-tripped when changed externally).
+ * @param {(html: string) => void} [props.onChange] - Called with new HTML on edit ('' when empty).
+ * @param {() => void} [props.onBlur] - Called when the editor loses focus (for validation).
+ * @param {string} [props.placeholder] - Placeholder shown while the editor is empty.
+ * @param {boolean} [props.disabled] - When set, renders read-only and disables the toolbar.
+ * @param {number} [props.maxLength] - When set, shows a live character counter (highlighted over the limit).
+ * @param {(file: File) => Promise<string>} [props.onImageUpload] - Uploads a chosen image and resolves its URL; falls back to a URL prompt when absent.
+ * @returns {JSX.Element}
+ */
 export default function RichTextDescription({
   value = '',
   onChange,
@@ -304,7 +321,12 @@ export default function RichTextDescription({
         {btn('bullet', 'Bulleted list', editor.isActive('bulletList'), () =>
           chain().toggleBulletList().run(),
         )}
-        {btn('link', 'Insert link', editor.isActive('link') || linkOpen, openLink)}
+        {btn(
+          'link',
+          'Insert link',
+          editor.isActive('link') || linkOpen,
+          openLink,
+        )}
         {btn('image', 'Insert image', false, handleImage)}
       </div>
       {linkOpen && (

@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import LandingNav from './LandingNav.jsx'
-import Footer from './Footer.jsx'
-import './signup.css' // design tokens + reusable classes
-import './landing.css'
+import LandingNav from '../components/LandingNav.jsx'
+import Footer from '../components/Footer.jsx'
+import '../styles/signup.css' // design tokens + reusable classes
+import '../styles/landing.css'
 
 const FEATURES = [
   {
@@ -57,6 +57,10 @@ const FEATURES = [
   },
 ]
 
+/**
+ * "/" marketing landing page — renders the hero, feature grid, "why choose us" section, and CTA with links to /signup and /login.
+ * @returns {JSX.Element}
+ */
 export default function LandingPage() {
   return (
     <div className="landing" id="top">

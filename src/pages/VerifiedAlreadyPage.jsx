@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom'
-import Header from './Header.jsx'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import '../styles/signup.css'
 
+/**
+ * /already-verified status page — informs the user their email is already verified and links back to sign up.
+ * @returns {JSX.Element}
+ */
 export default function VerifiedAlreadyPage() {
   return (
     <div className="page">

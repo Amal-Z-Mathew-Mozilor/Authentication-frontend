@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Header from './Header.jsx'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import '../styles/signup.css'
 
 const SIGNUP_URL = '/pulse/users/signup'
 
@@ -25,6 +25,11 @@ const PASSWORD_RULES = [
 
 const EMPTY_ERRORS = { email: [], password: [] }
 
+/**
+ * /signup page — POSTs { email, password, verifyBase } to /pulse/users/signup, then shows a
+ * "verify your email" success card; renders 422 field errors inline and 409/other errors as a toast.
+ * @returns {JSX.Element}
+ */
 export default function SignupPage() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState(EMPTY_ERRORS)
@@ -213,6 +218,15 @@ export default function SignupPage() {
     </div>
   )
 }
+/**
+ * Labeled input field with an optional hint and an inline error list.
+ * @param {object} props
+ * @param {string} props.id - Input id, also the label's htmlFor target.
+ * @param {string} props.label - Field label text.
+ * @param {string} [props.hint] - Optional hint shown next to the label.
+ * @param {string[]} [props.errors] - Error messages to render below the input (default []).
+ * @returns {JSX.Element}
+ */
 function Field({ id, label, hint, errors = [], ...props }) {
   return (
     <div className={`field ${errors.length ? 'invalid' : ''}`}>

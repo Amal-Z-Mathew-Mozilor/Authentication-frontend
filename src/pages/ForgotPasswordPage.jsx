@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Header from './Header.jsx'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import '../styles/signup.css'
 
 const FORGOT_URL = '/pulse/users/forgotPassword'
 
+/**
+ * /forgotPassword page — POSTs { email, resetBase } to /pulse/users/forgotPassword, then shows a
+ * "check your inbox" card; renders 422 email errors inline and other failures as a toast.
+ * @returns {JSX.Element}
+ */
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [errors, setErrors] = useState([])

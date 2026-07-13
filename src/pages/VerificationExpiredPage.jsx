@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { useParams, useLocation } from 'react-router-dom'
-import Header from './Header.jsx'
-import './signup.css'
+import { useParams } from 'react-router-dom'
+import Header from '../components/Header.jsx'
+import '../styles/signup.css'
 
-export default function ResetExpiredPage() {
+/**
+ * /verification-expired/:token status page — shows the expired-link notice and POSTs /pulse/users/resend/:token (with a verifyBase) to send a fresh verification email, surfacing a success state or an error toast.
+ * @returns {JSX.Element}
+ */
+export default function VerificationExpiredPage() {
   const { token } = useParams()
-  const { state } = useLocation()
-  const used = state?.reason === 'used' // used vs expired → different wording (resend works either way)
   const [status, setStatus] = useState('idle') // idle | sending | sent
   const [toast, setToast] = useState(null)
 
@@ -20,12 +22,12 @@ export default function ResetExpiredPage() {
     setStatus('sending')
     setToast(null)
     try {
-      const res = await fetch(`/pulse/users/resetResend/${token}`, {
+      const res = await fetch(`/pulse/users/resend/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          resetBase: `${window.location.origin}/resetPassword`,
+          verifyBase: `${window.location.origin}/verify`,
         }),
       })
 
@@ -41,7 +43,10 @@ export default function ResetExpiredPage() {
         return
       }
 
-      setToast({ message: data.message || 'Could not resend the reset email.' })
+      // 400 — invalid token / already verified, etc.
+      setToast({
+        message: data.message || 'Could not resend the verification email.',
+      })
       setStatus('idle')
     } catch {
       setToast({
@@ -58,8 +63,8 @@ export default function ResetExpiredPage() {
         <main className="main">
           <div className="card success">
             <div className="check">✓</div>
-            <h2>Reset email sent</h2>
-            <p>A new password reset email has been sent.</p>
+            <h2>Verification email sent</h2>
+            <p>A new verification email has been sent.</p>
           </div>
         </main>
       </div>
@@ -80,19 +85,15 @@ export default function ResetExpiredPage() {
       <main className="main">
         <div className="card success">
           <div className="check warn">⏱</div>
-          <h2>{used ? 'Reset link already used' : 'Reset link expired'}</h2>
-          <p>
-            {used
-              ? 'This password reset link has already been used. Request a new one below.'
-              : 'This password reset link has expired. Request a new one below.'}
-          </p>
+          <h2>Verification link expired</h2>
+          <p>This verification link has expired. Request a new one below.</p>
           <button
             type="button"
             className="submit resend-btn"
             onClick={handleResend}
             disabled={status === 'sending'}
           >
-            {status === 'sending' ? 'Sending…' : 'Resend reset link'}
+            {status === 'sending' ? 'Sending…' : 'Resend verification email'}
           </button>
         </div>
       </main>

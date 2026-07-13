@@ -1,7 +1,11 @@
 import { useNavigate } from 'react-router-dom'
-import Header from './Header.jsx'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import '../styles/signup.css'
 
+/**
+ * /verification-required status page — prompts the user to verify their email, with a button that navigates back to /login.
+ * @returns {JSX.Element}
+ */
 export default function VerificationRequiredPage() {
   const navigate = useNavigate()
 

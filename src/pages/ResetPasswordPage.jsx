@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import Header from './Header.jsx'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import '../styles/signup.css'
 
 const EMPTY_ERRORS = { email: [], newPassword: [], confirmPassword: [] }
 
+/**
+ * /resetPassword/:token page — pre-checks the token on mount via POST /resetPassword/:token/check,
+ * then POSTs { email, newPassword, confirmPassword } to /pulse/users/resetPassword/:token.
+ * Routes expired/used tokens to /reset-expired/:token, shows an invalid-link or network-error
+ * state, renders 422 field errors inline, and shows a "password updated" card on success.
+ * @returns {JSX.Element}
+ */
 export default function ResetPasswordPage() {
   const { token } = useParams()
   const navigate = useNavigate()

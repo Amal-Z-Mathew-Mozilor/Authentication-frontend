@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import Header from './Header.jsx'
-import { apiFetch } from './apiFetch.js'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import { apiFetch } from '../lib/apiFetch.js'
+import '../styles/signup.css'
 
 const EMPTY_ERRORS = { oldPassword: [], newPassword: [], confirmPassword: [] }
 
+/**
+ * /change-password page — POSTs { oldPassword, newPassword, confirmPassword } to
+ * /pulse/users/changePassword via apiFetch; on success shows a "signed out everywhere" card and
+ * redirects to /login after 2s. Redirects to /login on 401/403, renders 422 field errors inline,
+ * and shows 400/network messages in a banner.
+ * @returns {JSX.Element}
+ */
 export default function ChangePasswordPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({

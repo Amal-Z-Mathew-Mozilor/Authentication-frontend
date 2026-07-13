@@ -1,21 +1,25 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import LandingPage from './LandingPage.jsx'
-import SignupPage from './SignupPage.jsx'
-import LoginPage from './LoginPage.jsx'
-import ForgotPasswordPage from './ForgotPasswordPage.jsx'
-import ResetPasswordPage from './ResetPasswordPage.jsx'
-import ResetExpiredPage from './ResetExpiredPage.jsx'
-import HomePage from './HomePage.jsx'
-import VerifyEmailPage from './VerifyEmailPage.jsx'
-import ChangePasswordPage from './ChangePasswordPage.jsx'
-import WebManagerPage from './WebManagerPage.jsx'
-import CookiePolicyPage from './CookiePolicyPage.jsx'
-import PolicyPreviewPage from './PolicyPreviewPage.jsx'
-import VerifiedAlreadyPage from './VerifiedAlreadyPage.jsx'
-import VerificationExpiredPage from './VerificationExpiredPage.jsx'
-import VerificationInvalidPage from './VerificationInvalidPage.jsx'
-import VerificationRequiredPage from './VerificationRequiredPage.jsx'
+import LandingPage from './pages/LandingPage.jsx'
+import SignupPage from './pages/SignupPage.jsx'
+import LoginPage from './pages/LoginPage.jsx'
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx'
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx'
+import ResetExpiredPage from './pages/ResetExpiredPage.jsx'
+import HomePage from './pages/HomePage.jsx'
+import VerifyEmailPage from './pages/VerifyEmailPage.jsx'
+import ChangePasswordPage from './pages/ChangePasswordPage.jsx'
+import WebManagerPage from './pages/WebManagerPage.jsx'
+import CookiePolicyPage from './pages/CookiePolicyPage.jsx'
+import PolicyPreviewPage from './pages/PolicyPreviewPage.jsx'
+import VerifiedAlreadyPage from './pages/VerifiedAlreadyPage.jsx'
+import VerificationExpiredPage from './pages/VerificationExpiredPage.jsx'
+import VerificationInvalidPage from './pages/VerificationInvalidPage.jsx'
+import VerificationRequiredPage from './pages/VerificationRequiredPage.jsx'
 
+/**
+ * Application root — holds the BrowserRouter and declares every route in the app.
+ * @returns {JSX.Element}
+ */
 function App() {
   return (
     <BrowserRouter>

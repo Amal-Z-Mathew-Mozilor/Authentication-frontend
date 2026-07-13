@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import Header from './Header.jsx'
-import PolicyDocument from './PolicyDocument.jsx'
-import { apiFetch } from './apiFetch.js'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import PolicyDocument from '../components/PolicyDocument.jsx'
+import { apiFetch } from '../lib/apiFetch.js'
+import '../styles/signup.css'
 
 // Ordered section keys, matching the wizard's SECTIONS in CookiePolicyPage.
 const SECTION_KEYS = ['aboutCookies', 'useOfCookies', 'cookiePreferences']
@@ -12,6 +12,13 @@ const SECTION_KEYS = ['aboutCookies', 'useOfCookies', 'cookiePreferences']
 // cookie policy" step. Renders the SAVED policy as a real page with a disclaimer
 // sidebar, a (disabled) "Add policy to site" action, and 100% progress. Reached
 // after the wizard's Generate button saves the last section.
+/**
+ * /cookie-policy/:websiteId/preview route — read-only Policy Preview (the final "Generate" step).
+ * Loads the saved policy and renders it via PolicyDocument, offers an "Add policy to site" modal
+ * (HTML-snippet copy / send to a teammate) and a kebab menu to edit or delete (reset) the policy;
+ * shows a one-time success toast when arriving straight from the wizard's Generate button.
+ * @returns {JSX.Element}
+ */
 export default function PolicyPreviewPage() {
   const { websiteId } = useParams()
   const navigate = useNavigate()
@@ -83,6 +90,10 @@ export default function PolicyPreviewPage() {
 
   // Close the modal and reset it to the method step, dropping any fetched code so the
   // next open starts clean (and re-fetches fresh HTML). Used by ✕/backdrop/Esc.
+  /**
+   * Close the "Add policy to site" modal and reset it to the method step, clearing fetched code/state.
+   * @returns {void}
+   */
   const closeAdd = useCallback(() => {
     setAddOpen(false)
     setAddStep('method')
@@ -117,6 +128,10 @@ export default function PolicyPreviewPage() {
   }, [copied])
 
   // Fetch the self-contained HTML snippet for the "HTML format" option.
+  /**
+   * Fetch the self-contained HTML snippet for the "HTML format" export and store it for display.
+   * @returns {Promise<void>}
+   */
   async function loadHtml() {
     setHtmlLoad('loading')
     try {
@@ -145,6 +160,10 @@ export default function PolicyPreviewPage() {
     loadHtml()
   }
 
+  /**
+   * Copy the fetched HTML snippet to the clipboard and briefly show the "Copied!" state.
+   * @returns {Promise<void>}
+   */
   async function handleCopy() {
     if (htmlLoad !== 'ready' || !navigator.clipboard) return
     try {
@@ -157,6 +176,11 @@ export default function PolicyPreviewPage() {
 
   // Send the install snippet to a teammate. Client guard: email must be non-empty
   // (backend is the source of truth for format → 422 shown inline).
+  /**
+   * Email the install snippet to a teammate after a non-empty-email guard, then show the sent step.
+   * @param {import('react').FormEvent} e - The form submit event (default prevented).
+   * @returns {Promise<void>}
+   */
   async function handleSendCode(e) {
     e.preventDefault()
     if (!teamEmail.trim()) {
@@ -191,11 +215,17 @@ export default function PolicyPreviewPage() {
       setAddStep('sent')
     } catch {
       setSendState('error')
-      setSendError('Could not reach the server. Is the backend running on :8000?')
+      setSendError(
+        'Could not reach the server. Is the backend running on :8000?',
+      )
     }
   }
 
   // Delete = reset the policy to defaults server-side, then show the "deleted" dialog.
+  /**
+   * Delete the cookie policy (server resets it to defaults), then show the "deleted" dialog.
+   * @returns {Promise<void>}
+   */
   async function handleDelete() {
     setDeleting(true)
     try {
@@ -439,24 +469,24 @@ export default function PolicyPreviewPage() {
           </div>
 
           <div className="cp-main-scroll">
-          {banner && (
-            <div className="banner" role="alert">
-              {banner}
-            </div>
-          )}
+            {banner && (
+              <div className="banner" role="alert">
+                {banner}
+              </div>
+            )}
 
-          {load === 'loading' ? (
-            <p className="wm-empty">Loading…</p>
-          ) : load === 'ready' ? (
-            <div className="cp-preview-card">
-              <PolicyDocument
-                url={url}
-                sections={sections}
-                effectiveDate={effectiveDate}
-                lastUpdated={lastUpdated}
-              />
-            </div>
-          ) : null}
+            {load === 'loading' ? (
+              <p className="wm-empty">Loading…</p>
+            ) : load === 'ready' ? (
+              <div className="cp-preview-card">
+                <PolicyDocument
+                  url={url}
+                  sections={sections}
+                  effectiveDate={effectiveDate}
+                  lastUpdated={lastUpdated}
+                />
+              </div>
+            ) : null}
           </div>
         </main>
       </div>
@@ -671,11 +701,7 @@ export default function PolicyPreviewPage() {
                 />
                 <div className="cp-code-actions">
                   {htmlLoad === 'error' ? (
-                    <button
-                      type="button"
-                      className="cp-btn"
-                      onClick={loadHtml}
-                    >
+                    <button type="button" className="cp-btn" onClick={loadHtml}>
                       Retry
                     </button>
                   ) : (

@@ -27,28 +27,42 @@ docker compose up   # run the dev server in a container (installs deps inside; s
 
 ## Structure
 
+Files are organized by role: route-level pages in `pages/`, shared/reusable UI in
+`components/`, framework-agnostic helpers in `lib/`, and CSS in `styles/`. Imports use
+relative paths (`../components/…`, `../lib/…`, `../styles/…`); `main.jsx`/`App.jsx` stay at
+the `src/` root.
+
 ```
 frontend/src/
-├── main.jsx                    # bootstrap (createRoot + <StrictMode>)
-├── App.jsx                     # <BrowserRouter> + all <Route>s
-├── apiFetch.js                 # fetch wrapper: token-rotation interceptor (see below)
-├── Header.jsx                  # shared top bar (Pulse logo); optional "Web Manager" link + Account menu via <Header account />
-├── WebManagerPage.jsx          # /web-manager — list/add/edit/delete websites (calls /pulse/websites); per-row "Cookie policy" button fetches the policy and routes to the preview page if content.generatedAt is set, else the wizard's first step (falls back to the wizard on error)
-├── CookiePolicyPage.jsx        # /cookie-policy/:websiteId — section-aware editor (About cookies + Use of cookies + Cookie preferences; heading + rich-text description; effective-date picker on the preferences tab); Previous/Next wizard nav that auto-saves the current section then shows a green "Draft saved successfully!" toast; on the LAST step the primary button is "Generate cookie policy" (instead of Next) — **disabled until EVERY section has a non-empty heading + description** (computed from live editor state, so it reflects unsaved edits on any tab; tooltip + a `.cp-generate-hint` name the incomplete section[s]); on click it saves ALL sections (not just the current one, so edits to sidebar-jumped sections aren't lost) then PUTs `generated: true` so the server stamps `content.generatedAt`, then navigates to the Policy Preview page; top "Back to Dashboard" button navigates to /home immediately WITHOUT saving (unsaved edits discarded; the DB's last-saved content re-loads on return — never blocked by an empty field); "Preview cookie policy" button pinned to the sidebar bottom opens the PolicyPreview modal; below it a position-based progress bar ("N% complete": About 0% → Use 40% → Preferences 80%); viewport-capped layout (.cp-page) with a scrollable body (.cp-main-scroll) and pinned full-width action footer
-├── PolicyPreviewPage.jsx       # /cookie-policy/:websiteId/preview — read-only Policy Preview page (final "Generate" step): loads SAVED content; sidebar = title + "Generating cookie policy for <url>" + amber Disclaimer + "Edit cookie policy" (→ /cookie-policy/:websiteId, About step) + static 100% progress; main = "Policy preview" header with an "Add policy to site" button (opens the "Add cookie policy to your site" method-picker modal — a single ACTIVE "HTML format" card that opens a two-step code view: fetches the self-contained snippet from `GET …/cookie-policy/html`, shows "Step 1: Copy this HTML code" + a read-only code box + a working "Copy code" button + an ACTIVE "Send code to a teammate" button + "Step 2: Paste…"; "Send code to a teammate" opens a `send` step (required email field → `POST …/cookie-policy/send-code`) then a `sent` success step ("Installation code sent successfully!" + Okay); Back returns to the picker, no language selector; ✕/backdrop/Esc/Okay close AND reset to the picker, locks body scroll) + an ACTIVE 3-dots kebab menu → "Edit policy" (→ wizard About step) / "Delete policy" (→ confirm modal → DELETE cookie-policy [reset] → "Your cookie policy is deleted" modal w/ Back to Dashboard [/home] + Create new cookie policy [→ wizard]); the composed policy (via PolicyDocument); a top-center green success toast shown ONLY when arriving from the wizard's "Generate cookie policy" button (via `location.state.justGenerated`, cleared on mount so refresh/back won't replay it) — NOT on a returning user's Web-Manager visit
-├── PolicyDocument.jsx          # shared rendered-policy body (title, effective/last-updated dates, each non-empty section's heading + rich-text HTML, site-url footer) — used by BOTH PolicyPreview (modal) and PolicyPreviewPage; renders description HTML via dangerouslySetInnerHTML (user's own Tiptap output); `lastUpdated` prop (cookie_policy.updatedAt) drives "Last updated" — falls back to today only if absent
-├── PolicyPreview.jsx           # "Policy preview" modal — wraps PolicyDocument to render the composed policy from LIVE editor state incl. unsaved edits; closes on ✕/backdrop/Esc, locks body scroll; frontend-only (no endpoint)
-├── RichTextDescription.jsx     # reusable Tiptap rich-text editor (toolbar, links, png/jpg image upload) for Description fields; optional `onBlur` prop (wired to Tiptap's editor blur) for focus-out validation
-├── DatePicker.jsx              # custom calendar date-picker (no UI library) for the effective-date field; ISO in/out
-├── dateUtils.js                # local-date helpers (toISO/todayISO/parseISO/formatLong) shared by DatePicker + CookiePolicyPage
-├── LandingNav.jsx / Footer.jsx # landing-page chrome
-├── LandingPage.jsx             # marketing landing ("/")
-├── SignupPage.jsx  LoginPage.jsx  ForgotPasswordPage.jsx  ResetPasswordPage.jsx
-├── ChangePasswordPage.jsx  HomePage.jsx  VerifyEmailPage.jsx
-├── VerificationExpiredPage.jsx  VerificationInvalidPage.jsx  VerifiedAlreadyPage.jsx
-│   VerificationRequiredPage.jsx  ResetExpiredPage.jsx
-├── signup.css                  # THE design system (tokens + all shared classes)
-└── landing.css                 # landing-page layout (uses signup.css tokens)
+├── main.jsx                    # bootstrap (createRoot + <StrictMode>); imports ./styles/index.css
+├── App.jsx                     # <BrowserRouter> + all <Route>s (imports ./pages/*)
+│
+├── lib/
+│   ├── apiFetch.js             # fetch wrapper: token-rotation interceptor (see below)
+│   └── dateUtils.js            # local-date helpers (toISO/todayISO/parseISO/formatLong) shared by DatePicker + CookiePolicyPage
+│
+├── components/                 # shared / reusable UI (not route targets)
+│   ├── Header.jsx              # shared top bar (Pulse logo); optional "Web Manager" link + Account menu via <Header account />
+│   ├── LandingNav.jsx / Footer.jsx  # landing-page chrome
+│   ├── RichTextDescription.jsx # reusable Tiptap rich-text editor (toolbar, links, png/jpg image upload) for Description fields; optional `onBlur` prop (wired to Tiptap's editor blur) for focus-out validation
+│   ├── DatePicker.jsx          # custom calendar date-picker (no UI library) for the effective-date field; ISO in/out
+│   ├── PolicyDocument.jsx      # shared rendered-policy body (title, effective/last-updated dates, each non-empty section's heading + rich-text HTML, site-url footer) — used by BOTH PolicyPreview (modal) and PolicyPreviewPage; renders description HTML via dangerouslySetInnerHTML (user's own Tiptap output); `lastUpdated` prop (cookie_policy.updatedAt) drives "Last updated" — falls back to today only if absent
+│   └── PolicyPreview.jsx       # "Policy preview" modal — wraps PolicyDocument to render the composed policy from LIVE editor state incl. unsaved edits; closes on ✕/backdrop/Esc, locks body scroll; frontend-only (no endpoint)
+│
+├── pages/                      # route-level components (one per <Route>)
+│   ├── LandingPage.jsx         # marketing landing ("/")
+│   ├── WebManagerPage.jsx      # /web-manager — list/add/edit/delete websites (calls /pulse/websites); per-row "Cookie policy" button fetches the policy and routes to the preview page if content.generatedAt is set, else the wizard's first step (falls back to the wizard on error)
+│   ├── CookiePolicyPage.jsx    # /cookie-policy/:websiteId — section-aware editor (About cookies + Use of cookies + Cookie preferences; heading + rich-text description; effective-date picker on the preferences tab); Previous/Next wizard nav that auto-saves the current section then shows a green "Draft saved successfully!" toast; on the LAST step the primary button is "Generate cookie policy" (instead of Next) — **disabled until EVERY section has a non-empty heading + description** (computed from live editor state, so it reflects unsaved edits on any tab; tooltip + a `.cp-generate-hint` name the incomplete section[s]); on click it saves ALL sections (not just the current one, so edits to sidebar-jumped sections aren't lost) then PUTs `generated: true` so the server stamps `content.generatedAt`, then navigates to the Policy Preview page; top "Back to Dashboard" button navigates to /home immediately WITHOUT saving (unsaved edits discarded; the DB's last-saved content re-loads on return — never blocked by an empty field); "Preview cookie policy" button pinned to the sidebar bottom opens the PolicyPreview modal; below it a position-based progress bar ("N% complete": About 0% → Use 40% → Preferences 80%); viewport-capped layout (.cp-page) with a scrollable body (.cp-main-scroll) and pinned full-width action footer
+│   ├── PolicyPreviewPage.jsx   # /cookie-policy/:websiteId/preview — read-only Policy Preview page (final "Generate" step): loads SAVED content; sidebar = title + "Generating cookie policy for <url>" + amber Disclaimer + "Edit cookie policy" (→ /cookie-policy/:websiteId, About step) + static 100% progress; main = "Policy preview" header with an "Add policy to site" button (opens the "Add cookie policy to your site" method-picker modal — a single ACTIVE "HTML format" card that opens a two-step code view: fetches the self-contained snippet from `GET …/cookie-policy/html`, shows "Step 1: Copy this HTML code" + a read-only code box + a working "Copy code" button + an ACTIVE "Send code to a teammate" button + "Step 2: Paste…"; "Send code to a teammate" opens a `send` step (required email field → `POST …/cookie-policy/send-code`) then a `sent` success step ("Installation code sent successfully!" + Okay); Back returns to the picker, no language selector; ✕/backdrop/Esc/Okay close AND reset to the picker, locks body scroll) + an ACTIVE 3-dots kebab menu → "Edit policy" (→ wizard About step) / "Delete policy" (→ confirm modal → DELETE cookie-policy [reset] → "Your cookie policy is deleted" modal w/ Back to Dashboard [/home] + Create new cookie policy [→ wizard]); the composed policy (via PolicyDocument); a top-center green success toast shown ONLY when arriving from the wizard's "Generate cookie policy" button (via `location.state.justGenerated`, cleared on mount so refresh/back won't replay it) — NOT on a returning user's Web-Manager visit
+│   ├── SignupPage.jsx  LoginPage.jsx  ForgotPasswordPage.jsx  ResetPasswordPage.jsx
+│   ├── ChangePasswordPage.jsx  HomePage.jsx  VerifyEmailPage.jsx
+│   ├── VerificationExpiredPage.jsx  VerificationInvalidPage.jsx  VerifiedAlreadyPage.jsx
+│   └── VerificationRequiredPage.jsx  ResetExpiredPage.jsx
+│
+└── styles/
+    ├── signup.css              # THE design system (tokens + all shared classes)
+    ├── landing.css             # landing-page layout (uses signup.css tokens)
+    └── index.css               # global root styles (imported by main.jsx)
 ```
 
 ## Routes (`App.jsx`)

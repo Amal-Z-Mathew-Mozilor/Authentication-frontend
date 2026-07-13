@@ -13,6 +13,12 @@ const LOGIN_PATH = '/login'
 // old refresh entry and issues a new one, so parallel rotations would clobber each other).
 let refreshPromise = null
 
+/**
+ * Refresh the access token via POST /rotateToken, single-flight across concurrent callers.
+ * Concurrent expired requests share one in-flight rotation (rotateToken invalidates the old
+ * refresh entry, so parallel rotations would clobber each other).
+ * @returns {Promise<boolean>} True if the token was refreshed, false on any failure.
+ */
 function rotateOnce() {
   if (!refreshPromise) {
     refreshPromise = fetch(ROTATE_URL, {
@@ -29,6 +35,11 @@ function rotateOnce() {
 }
 
 // Peek at the response WITHOUT consuming its body (so the caller can still read it).
+/**
+ * Detect an "expired token" 401 by peeking at the response body via a clone.
+ * @param {Response} res - The fetch response (its body is left unconsumed).
+ * @returns {Promise<boolean>} True if the message matches /expired/i.
+ */
 async function isExpired(res) {
   try {
     const data = await res.clone().json()
@@ -40,6 +51,11 @@ async function isExpired(res) {
 
 // Server signalled a hard session invalidation (e.g. the password was changed on another device).
 // The server has already cleared the auth cookies; we just send the user to /login.
+/**
+ * Detect a hard session-invalidation 401 by peeking at the response body via a clone.
+ * @param {Response} res - The fetch response (its body is left unconsumed).
+ * @returns {Promise<boolean>} True if the message matches /invalidated/i.
+ */
 async function isInvalidated(res) {
   try {
     const data = await res.clone().json()
@@ -49,6 +65,15 @@ async function isInvalidated(res) {
   }
 }
 
+/**
+ * Fetch wrapper for JWT-protected requests that transparently rotates an expired token.
+ * Always sends credentials. On a "Token has expired" 401 it calls rotateOnce() and retries the
+ * request once with the refreshed cookie; if rotation fails, or the session was invalidated, it
+ * redirects to /login and returns the original 401 response.
+ * @param {string} url - Request URL (relative to the Vite /pulse proxy).
+ * @param {RequestInit} [options] - fetch options, merged over { credentials: 'include' }.
+ * @returns {Promise<Response>} The (possibly retried) fetch response.
+ */
 export async function apiFetch(url, options = {}) {
   const opts = { credentials: 'include', ...options }
 

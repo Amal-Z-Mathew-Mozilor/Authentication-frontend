@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Header from './Header.jsx'
-import { apiFetch } from './apiFetch.js'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import { apiFetch } from '../lib/apiFetch.js'
+import '../styles/signup.css'
 
 const ME_URL = '/pulse/users/me'
 
+/**
+ * /home dashboard page — POSTs /pulse/users/me via apiFetch to load the current user's email, redirects to /login on 401/403, and renders the Account header with the email or an error state.
+ * @returns {JSX.Element}
+ */
 export default function HomePage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')

@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import Header from './Header.jsx'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import '../styles/signup.css'
 
 const LOGIN_URL = '/pulse/users/login'
 
 // Backend returns wait times in seconds; show them in minutes.
+/**
+ * Format a lockout/rate-limit wait time (seconds) as a human phrase in minutes.
+ * @param {number|string} seconds - Wait time in seconds from the backend.
+ * @returns {string} A phrase like "a moment", "less than a minute", or "3 minutes".
+ */
 function formatMinutes(seconds) {
   const s = Number(seconds)
   if (!Number.isFinite(s) || s <= 0) return 'a moment'
@@ -14,6 +19,13 @@ function formatMinutes(seconds) {
   return `${m} minute${m === 1 ? '' : 's'}`
 }
 
+/**
+ * /login page — POSTs { email, password } to /pulse/users/login and navigates to /home on success.
+ * Guards against an empty password client-side, shows 422 email errors inline, and surfaces
+ * 429 lockout/rate-limit waits and 401 messages in a banner; routes unverified accounts (403)
+ * to /verification-required.
+ * @returns {JSX.Element}
+ */
 export default function LoginPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
@@ -183,6 +195,14 @@ export default function LoginPage() {
   )
 }
 
+/**
+ * Labeled input field with an inline error list.
+ * @param {object} props
+ * @param {string} props.id - Input id, also the label's htmlFor target.
+ * @param {string} props.label - Field label text.
+ * @param {string[]} [props.errors] - Error messages to render below the input (default []).
+ * @returns {JSX.Element}
+ */
 function Field({ id, label, errors = [], ...props }) {
   return (
     <div className={`field ${errors.length ? 'invalid' : ''}`}>

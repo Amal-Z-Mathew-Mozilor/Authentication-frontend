@@ -1,11 +1,22 @@
 import { useEffect } from 'react'
 import PolicyDocument from './PolicyDocument.jsx'
-import './signup.css'
+import '../styles/signup.css'
 
 // "Policy preview" modal — renders the cookie policy as it would appear on a real
 // page (assignment §2.4), from the LIVE editor state (unsaved edits included).
 // `sections` = ordered [{ sectionKey, heading, description }]; description is the
 // editor's own Tiptap HTML, so injecting it keeps the same trust boundary.
+/**
+ * "Policy preview" modal wrapping PolicyDocument to render the policy from live editor state.
+ * Closes on ✕/backdrop/Escape and locks body scroll while open.
+ * @param {object} props
+ * @param {string} [props.url] - Site URL passed through to PolicyDocument.
+ * @param {Array<{ sectionKey: string, heading: string, description: string }>} props.sections - Ordered policy sections.
+ * @param {string} [props.effectiveDate] - Effective date as ISO "YYYY-MM-DD".
+ * @param {string} [props.lastUpdated] - Last-edit timestamp forwarded to PolicyDocument.
+ * @param {() => void} props.onClose - Called to dismiss the modal.
+ * @returns {JSX.Element}
+ */
 export default function PolicyPreview({
   url,
   sections,

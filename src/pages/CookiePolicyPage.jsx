@@ -1,20 +1,28 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import Header from './Header.jsx'
-import RichTextDescription from './RichTextDescription.jsx'
-import DatePicker from './DatePicker.jsx'
-import PolicyPreview from './PolicyPreview.jsx'
-import { todayISO } from './dateUtils.js'
-import { apiFetch } from './apiFetch.js'
-import './signup.css'
+import Header from '../components/Header.jsx'
+import RichTextDescription from '../components/RichTextDescription.jsx'
+import DatePicker from '../components/DatePicker.jsx'
+import PolicyPreview from '../components/PolicyPreview.jsx'
+import { todayISO } from '../lib/dateUtils.js'
+import { apiFetch } from '../lib/apiFetch.js'
+import '../styles/signup.css'
 
 const EMPTY = { heading: [], description: [] }
 // Required-field message — shared by saveCurrent (navigation gate) and the on-blur
 // handlers so the two paths never disagree on the wording.
 const EMPTY_MSG = 'This field cannot be empty.'
 // A rich-text value counts as empty when it has no visible text (strip tags + &nbsp;).
+/**
+ * Check whether a rich-text HTML value has no visible text (tags and &nbsp; stripped).
+ * @param {string} html - The editor's HTML value.
+ * @returns {boolean} True when the value renders no visible text.
+ */
 const descIsEmpty = (html) =>
-  (html || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim().length === 0
+  (html || '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .trim().length === 0
 
 // Sidebar sections. `sectionKey` is the key in the cookie_policy.content jsonb / the
 // PUT `:section` path param. "Cookie preferences" is not built yet (disabled).
@@ -50,6 +58,11 @@ const SECTIONS = [
   },
 ]
 
+/**
+ * Group a 422 field-error array into per-field message lists for heading and description.
+ * @param {Array<{path: string, msg: string}>} errorsArr - Backend 422 errors (path is the field key).
+ * @returns {{heading: string[], description: string[]}} Messages bucketed by field.
+ */
 function group422(errorsArr) {
   const g = { heading: [], description: [] }
   if (Array.isArray(errorsArr)) {
@@ -58,12 +71,23 @@ function group422(errorsArr) {
   return g
 }
 
+/**
+ * Build an empty per-section content object (blank heading + description for each section).
+ * @returns {object} Fresh { aboutCookies, useOfCookies, cookiePreferences } with empty fields.
+ */
 const blankData = () => ({
   aboutCookies: { heading: '', description: '' },
   useOfCookies: { heading: '', description: '' },
   cookiePreferences: { heading: '', description: '' },
 })
 
+/**
+ * /cookie-policy/:websiteId route — section-aware wizard for editing a website's cookie policy.
+ * Loads existing content, edits one section at a time (heading + rich-text description, plus the
+ * effective date on the preferences tab), auto-saves on Previous/Next, and on the last step
+ * generates the policy (saving every section) before navigating to the read-only preview.
+ * @returns {JSX.Element}
+ */
 export default function CookiePolicyPage() {
   const { websiteId } = useParams()
   const navigate = useNavigate()
@@ -122,8 +146,14 @@ export default function CookiePolicyPage() {
   // A section is complete when both required fields have content. Computed from the live
   // `data` (all sections), so the Generate gate reflects unsaved edits on any tab —
   // CookieYes disables Generate while any section field is empty.
+  /**
+   * Report whether a section is complete — both its heading and description have content.
+   * @param {object} s - A SECTIONS entry (reads s.sectionKey).
+   * @returns {boolean} True when the section's heading and description are both non-empty.
+   */
   const isSectionComplete = (s) =>
-    data[s.sectionKey].heading.trim() && !descIsEmpty(data[s.sectionKey].description)
+    data[s.sectionKey].heading.trim() &&
+    !descIsEmpty(data[s.sectionKey].description)
   const incompleteSections = SECTIONS.filter(
     (s) => s.active && !isSectionComplete(s),
   )
@@ -199,6 +229,10 @@ export default function CookiePolicyPage() {
 
   // Image ids currently used across ALL section editors (live HTML in `data`), so the
   // backend keeps them even for sections not saved yet — see the cleanup plan doc.
+  /**
+   * Collect the unique /pulse/images/:id ids referenced across all section descriptions.
+   * @returns {string[]} Deduplicated image ids currently used in any editor's live HTML.
+   */
   function collectUsedImageIds() {
     const urls =
       Object.values(data)
@@ -210,6 +244,10 @@ export default function CookiePolicyPage() {
 
   // Save the current section (+ effective date on the preferences tab). Returns true on a
   // clean save, false on validation/request failure. Shared by Save draft and Prev/Next.
+  /**
+   * Validate and save the active section (plus the effective date on the preferences tab).
+   * @returns {Promise<boolean>} True on a clean save; false on validation or request failure.
+   */
   async function saveCurrent() {
     // Both fields are required — cannot save empty (matches CookieYes).
     const next = { heading: [], description: [] }
@@ -303,6 +341,10 @@ export default function CookiePolicyPage() {
   // Persist EVERY section. Sidebar jumps don't auto-save, so saving only the current
   // section (as Next does) could drop edits made on other tabs — save them all before
   // generating so the preview reflects the full editor state. Returns true iff all save.
+  /**
+   * Persist every active section's heading and description in order (used before generating).
+   * @returns {Promise<boolean>} True if all sections saved; false on the first auth/request failure.
+   */
   async function saveAllSections() {
     const usedImageIds = collectUsedImageIds()
     for (const s of SECTIONS) {
@@ -335,6 +377,11 @@ export default function CookiePolicyPage() {
 
   // Generate cookie policy (last step) — gated on every section being complete. Persist
   // all sections, stamp the policy generated, then navigate to the read-only preview.
+  /**
+   * Generate the cookie policy — save all sections, stamp it generated, then go to the preview.
+   * No-op unless every section is complete; surfaces failures in the banner.
+   * @returns {Promise<void>}
+   */
   async function handleGenerate() {
     if (!canGenerate) return
     setErrors(EMPTY)
@@ -468,114 +515,118 @@ export default function CookiePolicyPage() {
             <h1 className="cp-title">{current.title}</h1>
 
             {banner && (
-            <div className="banner" role="alert">
-              {banner}
-            </div>
-          )}
+              <div className="banner" role="alert">
+                {banner}
+              </div>
+            )}
 
-          {load === 'loading' ? (
-            <p className="wm-empty">Loading…</p>
-          ) : (
-            <>
-              <div className={`field ${errors.heading.length ? 'invalid' : ''}`}>
-                <label className="label" htmlFor="cp-heading">
-                  <span>Heading</span>
-                </label>
-                <div className="input-row">
-                  <input
-                    id="cp-heading"
-                    type="text"
-                    value={heading}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      setHeading(v)
-                      // Flag the moment it becomes empty (e.g. erased) and clear as soon
-                      // as there's text — no waiting for blur.
+            {load === 'loading' ? (
+              <p className="wm-empty">Loading…</p>
+            ) : (
+              <>
+                <div
+                  className={`field ${errors.heading.length ? 'invalid' : ''}`}
+                >
+                  <label className="label" htmlFor="cp-heading">
+                    <span>Heading</span>
+                  </label>
+                  <div className="input-row">
+                    <input
+                      id="cp-heading"
+                      type="text"
+                      value={heading}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setHeading(v)
+                        // Flag the moment it becomes empty (e.g. erased) and clear as soon
+                        // as there's text — no waiting for blur.
+                        setErrors((p) => ({
+                          ...p,
+                          heading: v.trim() ? [] : [EMPTY_MSG],
+                        }))
+                      }}
+                      onBlur={onHeadingBlur}
+                      placeholder={current.headingPlaceholder}
+                    />
+                  </div>
+                  {errors.heading.length > 0 && (
+                    <ul className="errlist">
+                      {errors.heading.map((m, i) => (
+                        <li key={i}>{m}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div
+                  className={`field ${errors.description.length ? 'invalid' : ''}`}
+                >
+                  <label className="label">
+                    <span>Description</span>
+                  </label>
+                  <RichTextDescription
+                    key={sectionKey}
+                    value={description}
+                    onChange={(html) => {
+                      setDescription(html)
+                      // Flag the moment it becomes empty (e.g. erased) and clear as soon as
+                      // there's text — no waiting for blur.
                       setErrors((p) => ({
                         ...p,
-                        heading: v.trim() ? [] : [EMPTY_MSG],
+                        description: descIsEmpty(html) ? [EMPTY_MSG] : [],
                       }))
                     }}
-                    onBlur={onHeadingBlur}
-                    placeholder={current.headingPlaceholder}
-                  />
-                </div>
-                {errors.heading.length > 0 && (
-                  <ul className="errlist">
-                    {errors.heading.map((m, i) => (
-                      <li key={i}>{m}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div
-                className={`field ${errors.description.length ? 'invalid' : ''}`}
-              >
-                <label className="label">
-                  <span>Description</span>
-                </label>
-                <RichTextDescription
-                  key={sectionKey}
-                  value={description}
-                  onChange={(html) => {
-                    setDescription(html)
-                    // Flag the moment it becomes empty (e.g. erased) and clear as soon as
-                    // there's text — no waiting for blur.
-                    setErrors((p) => ({
-                      ...p,
-                      description: descIsEmpty(html) ? [EMPTY_MSG] : [],
-                    }))
-                  }}
-                  onBlur={onDescriptionBlur}
-                  onImageUpload={async (file) => {
-                    const fd = new FormData()
-                    fd.append('file', file)
-                    const res = await apiFetch(
-                      `/pulse/websites/${websiteId}/images`,
-                      { method: 'POST', body: fd },
-                    )
-                    if (res.status === 401 || res.status === 403) {
-                      navigate('/login')
+                    onBlur={onDescriptionBlur}
+                    onImageUpload={async (file) => {
+                      const fd = new FormData()
+                      fd.append('file', file)
+                      const res = await apiFetch(
+                        `/pulse/websites/${websiteId}/images`,
+                        { method: 'POST', body: fd },
+                      )
+                      if (res.status === 401 || res.status === 403) {
+                        navigate('/login')
+                        return null
+                      }
+                      const upData = await res.json().catch(() => ({}))
+                      if (res.ok && upData?.data?.url) return upData.data.url
+                      setBanner(upData.message || 'Could not upload the image.')
                       return null
-                    }
-                    const upData = await res.json().catch(() => ({}))
-                    if (res.ok && upData?.data?.url) return upData.data.url
-                    setBanner(upData.message || 'Could not upload the image.')
-                    return null
-                  }}
-                  placeholder={current.descPlaceholder}
-                />
-                {errors.description.length > 0 && (
-                  <ul className="errlist">
-                    {errors.description.map((m, i) => (
-                      <li key={i}>{m}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              {active === 'preferences' && (
-                <div className="field cp-date-field">
-                  <label className="label">
-                    <span>What is the effective date for this Cookie Policy?</span>
-                  </label>
-                  <DatePicker
-                    value={effectiveDate}
-                    onChange={(iso) => {
-                      setEffectiveDate(iso)
                     }}
-                    placeholder="Select the effective date"
+                    placeholder={current.descPlaceholder}
                   />
-                  <p className="cp-generate-note">
-                    By clicking &quot;Generate cookie policy&quot;, you agree to our{' '}
-                    <a href="#terms">Terms and Conditions</a> &amp;{' '}
-                    <a href="#privacy">Privacy Policy</a>.
-                  </p>
+                  {errors.description.length > 0 && (
+                    <ul className="errlist">
+                      {errors.description.map((m, i) => (
+                        <li key={i}>{m}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-              )}
-            </>
-          )}
+
+                {active === 'preferences' && (
+                  <div className="field cp-date-field">
+                    <label className="label">
+                      <span>
+                        What is the effective date for this Cookie Policy?
+                      </span>
+                    </label>
+                    <DatePicker
+                      value={effectiveDate}
+                      onChange={(iso) => {
+                        setEffectiveDate(iso)
+                      }}
+                      placeholder="Select the effective date"
+                    />
+                    <p className="cp-generate-note">
+                      By clicking &quot;Generate cookie policy&quot;, you agree
+                      to our <a href="#terms">Terms and Conditions</a> &amp;{' '}
+                      <a href="#privacy">Privacy Policy</a>.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {load !== 'loading' && !nextKey && !canGenerate && (
@@ -586,78 +637,78 @@ export default function CookiePolicyPage() {
           )}
           {load !== 'loading' && (
             <div className="cp-actions">
+              <button
+                type="button"
+                className="cp-btn cp-prev"
+                onClick={() => goTo(prevKey)}
+                disabled={saving || !prevKey}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Previous
+              </button>
+              <div className="cp-actions-right">
                 <button
                   type="button"
-                  className="cp-btn cp-prev"
-                  onClick={() => goTo(prevKey)}
-                  disabled={saving || !prevKey}
+                  className={`cp-btn cp-save ${saving ? 'loading' : ''}`}
+                  onClick={handleSave}
+                  disabled={saving}
                 >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <polyline points="15 18 9 12 15 6" />
-                  </svg>
-                  Previous
+                  Save draft
                 </button>
-                <div className="cp-actions-right">
+                {nextKey ? (
                   <button
                     type="button"
-                    className={`cp-btn cp-save ${saving ? 'loading' : ''}`}
-                    onClick={handleSave}
+                    className={`submit cp-next ${saving ? 'loading' : ''}`}
+                    onClick={() => goTo(nextKey)}
                     disabled={saving}
                   >
-                    Save draft
+                    Next
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
                   </button>
-                  {nextKey ? (
-                    <button
-                      type="button"
-                      className={`submit cp-next ${saving ? 'loading' : ''}`}
-                      onClick={() => goTo(nextKey)}
-                      disabled={saving}
-                    >
-                      Next
-                      <svg
-                        viewBox="0 0 24 24"
-                        width="16"
-                        height="16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className={`submit cp-generate ${saving ? 'loading' : ''}`}
-                      onClick={handleGenerate}
-                      disabled={saving || !canGenerate}
-                      title={
-                        !canGenerate
-                          ? `Complete all sections to generate: ${incompleteSections
-                              .map((s) => s.label)
-                              .join(', ')}`
-                          : undefined
-                      }
-                    >
-                      Generate cookie policy
-                    </button>
-                  )}
-                </div>
+                ) : (
+                  <button
+                    type="button"
+                    className={`submit cp-generate ${saving ? 'loading' : ''}`}
+                    onClick={handleGenerate}
+                    disabled={saving || !canGenerate}
+                    title={
+                      !canGenerate
+                        ? `Complete all sections to generate: ${incompleteSections
+                            .map((s) => s.label)
+                            .join(', ')}`
+                        : undefined
+                    }
+                  >
+                    Generate cookie policy
+                  </button>
+                )}
               </div>
-            )}
+            </div>
+          )}
         </main>
       </div>
       {toast && (

@@ -1,9 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
-import { MONTHS, WEEKDAYS, toISO, todayISO, parseISO, formatLong } from './dateUtils.js'
+import {
+  MONTHS,
+  WEEKDAYS,
+  toISO,
+  todayISO,
+  parseISO,
+  formatLong,
+} from '../lib/dateUtils.js'
 
 // Custom calendar date-picker (no UI library). Value in/out is ISO "YYYY-MM-DD".
 
-export default function DatePicker({ value = '', onChange, placeholder = 'Select a date' }) {
+/**
+ * Custom calendar date-picker (no UI library) with month navigation and a 6-week grid.
+ * Value in/out is an ISO "YYYY-MM-DD" string; dismisses on outside click / Escape.
+ * @param {object} props
+ * @param {string} [props.value] - Currently selected date as ISO "YYYY-MM-DD" ('' = none).
+ * @param {(iso: string) => void} props.onChange - Called with the picked date as ISO "YYYY-MM-DD".
+ * @param {string} [props.placeholder] - Text shown when no date is selected.
+ * @returns {JSX.Element}
+ */
+export default function DatePicker({
+  value = '',
+  onChange,
+  placeholder = 'Select a date',
+}) {
   const [open, setOpen] = useState(false)
   // Which month the grid is showing (independent of the selected value).
   const initial = parseISO(value) || parseISO(todayISO())
@@ -50,9 +70,19 @@ export default function DatePicker({ value = '', onChange, placeholder = 'Select
   for (let i = 0; i < 42; i++) {
     const dayNum = i - firstDow + 1
     if (dayNum < 1) {
-      cells.push({ d: daysInPrev + dayNum, y: view.y, m: view.m - 1, out: true })
+      cells.push({
+        d: daysInPrev + dayNum,
+        y: view.y,
+        m: view.m - 1,
+        out: true,
+      })
     } else if (dayNum > daysInMonth) {
-      cells.push({ d: dayNum - daysInMonth, y: view.y, m: view.m + 1, out: true })
+      cells.push({
+        d: dayNum - daysInMonth,
+        y: view.y,
+        m: view.m + 1,
+        out: true,
+      })
     } else {
       cells.push({ d: dayNum, y: view.y, m: view.m, out: false })
     }
@@ -68,7 +98,8 @@ export default function DatePicker({ value = '', onChange, placeholder = 'Select
     onChange(toISO(d.getFullYear(), d.getMonth(), d.getDate()))
     setOpen(false)
   }
-  const sameDay = (c, p) => p && !c.out && c.y === p.y && c.m === p.m && c.d === p.d
+  const sameDay = (c, p) =>
+    p && !c.out && c.y === p.y && c.m === p.m && c.d === p.d
 
   return (
     <div className="cp-datepicker" ref={rootRef}>
@@ -94,10 +125,18 @@ export default function DatePicker({ value = '', onChange, placeholder = 'Select
               aria-label="Previous month"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M15 18l-6-6 6-6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
-            <span className="cp-cal-title">{MONTHS[view.m]} {view.y}</span>
+            <span className="cp-cal-title">
+              {MONTHS[view.m]} {view.y}
+            </span>
             <button
               type="button"
               className="cp-cal-nav"
@@ -105,7 +144,13 @@ export default function DatePicker({ value = '', onChange, placeholder = 'Select
               aria-label="Next month"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M9 6l6 6-6 6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           </div>
