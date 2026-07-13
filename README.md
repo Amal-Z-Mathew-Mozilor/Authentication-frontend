@@ -1,8 +1,11 @@
 # Pulse — Frontend
 
-React client for the Pulse authentication app: **React 19** + **Vite 8**, plain JSX (no
-TypeScript), routed with `react-router-dom`. It talks to the Pulse backend (`../backend`, a
-separate repo) through a dev proxy and cookie-based auth.
+React client for the Pulse app: **React 19** + **Vite 8**, plain JSX (no TypeScript), routed with
+`react-router-dom`. Alongside the auth flows (signup, login, email verification, password reset) it
+provides the **cookie-consent** UI: a **Web Manager** to add/edit websites and a **cookie-policy
+wizard** — a section-based editor with a Tiptap rich-text Description field, image uploads, live
+preview, and a final "Generate" step that exports the policy as HTML or emails it to a teammate. It
+talks to the Pulse backend (`../backend`, a separate repo) through a dev proxy and cookie-based auth.
 
 > Contributor notes (design system, routes, API integration) are in [`CLAUDE.md`](./CLAUDE.md).
 
