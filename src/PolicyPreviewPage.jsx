@@ -22,6 +22,7 @@ export default function PolicyPreviewPage() {
   const [banner, setBanner] = useState(null)
   const [sections, setSections] = useState([])
   const [effectiveDate, setEffectiveDate] = useState('')
+  const [lastUpdated, setLastUpdated] = useState('') // cookie_policy.updatedAt (ISO)
   const [menuOpen, setMenuOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false) // "Add policy to site" method-picker modal
   const [addStep, setAddStep] = useState('method') // 'method' | 'html' | 'send' | 'sent'
@@ -258,6 +259,7 @@ export default function PolicyPreviewPage() {
           })),
         )
         setEffectiveDate(content.effectiveDate || '')
+        setLastUpdated(polData?.data?.updatedAt || '')
         setLoad('ready')
       } catch {
         if (active) {
@@ -451,6 +453,7 @@ export default function PolicyPreviewPage() {
                 url={url}
                 sections={sections}
                 effectiveDate={effectiveDate}
+                lastUpdated={lastUpdated}
               />
             </div>
           ) : null}

@@ -73,6 +73,7 @@ export default function CookiePolicyPage() {
   const [active, setActive] = useState('about') // sidebar key
   const [data, setData] = useState(blankData) // per-section { heading, description }
   const [effectiveDate, setEffectiveDate] = useState('') // ISO YYYY-MM-DD (policy-level)
+  const [lastUpdated, setLastUpdated] = useState('') // cookie_policy.updatedAt (ISO); last-saved
   const [errors, setErrors] = useState(EMPTY)
   const [banner, setBanner] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -171,6 +172,8 @@ export default function CookiePolicyPage() {
         setData(next)
         // Effective date is policy-level; default to today if none saved yet.
         setEffectiveDate(content.effectiveDate || todayISO())
+        // Last-saved timestamp for the preview's "Last updated" (stays until the next save).
+        setLastUpdated(polData?.data?.updatedAt || '')
         setLoad('ready')
       } catch {
         if (active) {
@@ -689,6 +692,7 @@ export default function CookiePolicyPage() {
             ...data[s.sectionKey],
           }))}
           effectiveDate={effectiveDate}
+          lastUpdated={lastUpdated}
           onClose={() => setShowPreview(false)}
         />
       )}

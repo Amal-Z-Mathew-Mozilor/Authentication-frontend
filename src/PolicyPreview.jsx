@@ -6,7 +6,13 @@ import './signup.css'
 // page (assignment §2.4), from the LIVE editor state (unsaved edits included).
 // `sections` = ordered [{ sectionKey, heading, description }]; description is the
 // editor's own Tiptap HTML, so injecting it keeps the same trust boundary.
-export default function PolicyPreview({ url, sections, effectiveDate, onClose }) {
+export default function PolicyPreview({
+  url,
+  sections,
+  effectiveDate,
+  lastUpdated,
+  onClose,
+}) {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') onClose()
@@ -58,6 +64,7 @@ export default function PolicyPreview({ url, sections, effectiveDate, onClose })
           url={url}
           sections={sections}
           effectiveDate={effectiveDate}
+          lastUpdated={lastUpdated}
         />
       </div>
     </div>
