@@ -141,7 +141,7 @@ frontend/src/
 | PUT | `/pulse/websites/:id/cookie-policy` | `{ effectiveDate, usedImageIds?, generated? }` (base path; ISO `YYYY-MM-DD`; upserts policy meta, preserves sections; `generated: true` = the "Generate cookie policy" action → server stamps `content.generatedAt`) |
 | DELETE | `/pulse/websites/:id/cookie-policy` | — (base path; "delete" = **resets** content to the default seed + sweeps the policy's images; not a row removal) |
 | POST | `/pulse/websites/:id/images` | multipart `file` (png/jpg) → `{ data: { url } }` |
-| GET | `/pulse/images/:id` | — (public; returns the image binary) |
+| GET | `/pulse/images/:id` | — (authenticated + owner-scoped; streams the image bytes with `Content-Type: image/*`, long immutable cache. `<img>` sends the `accessToken` cookie automatically) |
 
 ### Response shapes
 - **Error:** `{ success: false, message, errors }`. `errors` is an array of `{ path, msg }` for
