@@ -15,7 +15,7 @@ const SECTION_KEYS = ['aboutCookies', 'useOfCookies', 'cookiePreferences']
 /**
  * /cookie-policy/:websiteId/preview route — read-only Policy Preview (the final "Generate" step).
  * Loads the saved policy and renders it via PolicyDocument, offers an "Add policy to site" modal
- * (HTML-snippet copy / send to a teammate) and a kebab menu to edit or delete (reset) the policy;
+ * (HTML snippet or auto-updating script snippet — copy / send to a teammate) and a kebab menu to edit or delete (reset) the policy;
  * shows a one-time success toast when arriving straight from the wizard's Generate button.
  * @returns {JSX.Element}
  */
@@ -32,9 +32,12 @@ export default function PolicyPreviewPage() {
   const [lastUpdated, setLastUpdated] = useState('') // cookie_policy.updatedAt (ISO)
   const [menuOpen, setMenuOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false) // "Add policy to site" method-picker modal
-  const [addStep, setAddStep] = useState('method') // 'method' | 'html' | 'send' | 'sent'
+  const [addStep, setAddStep] = useState('method') // 'method' | 'html' | 'script' | 'send' | 'sent'
   const [htmlCode, setHtmlCode] = useState(null) // fetched self-contained HTML snippet
   const [htmlLoad, setHtmlLoad] = useState('idle') // idle | loading | ready | error
+  const [scriptCode, setScriptCode] = useState(null) // fetched <script> embed tag
+  const [scriptLoad, setScriptLoad] = useState('idle') // idle | loading | ready | error
+  const [sendFormat, setSendFormat] = useState('html') // which snippet the send step emails
   const [copied, setCopied] = useState(false)
   const [teamEmail, setTeamEmail] = useState('') // "Send code to a teammate" recipient
   const [sentTo, setSentTo] = useState('') // email shown on the success step
@@ -99,6 +102,9 @@ export default function PolicyPreviewPage() {
     setAddStep('method')
     setHtmlCode(null)
     setHtmlLoad('idle')
+    setScriptCode(null)
+    setScriptLoad('idle')
+    setSendFormat('html')
     setCopied(false)
     setTeamEmail('')
     setSentTo('')
@@ -160,6 +166,39 @@ export default function PolicyPreviewPage() {
     loadHtml()
   }
 
+  // Fetch the <script> embed tag for the "Code snippet" option.
+  /**
+   * Fetch the <script> embed tag for the "Code snippet" method and store it for display.
+   * @returns {Promise<void>}
+   */
+  async function loadScript() {
+    setScriptLoad('loading')
+    try {
+      const res = await apiFetch(
+        `/pulse/websites/${websiteId}/cookie-policy/script`,
+        { method: 'GET' },
+      )
+      if (res.status === 401 || res.status === 403) {
+        navigate('/login')
+        return
+      }
+      if (!res.ok) {
+        setScriptLoad('error')
+        return
+      }
+      const d = await res.json().catch(() => ({}))
+      setScriptCode(d?.data?.script || '')
+      setScriptLoad('ready')
+    } catch {
+      setScriptLoad('error')
+    }
+  }
+
+  function openScriptStep() {
+    setAddStep('script')
+    loadScript()
+  }
+
   /**
    * Copy the fetched HTML snippet to the clipboard and briefly show the "Copied!" state.
    * @returns {Promise<void>}
@@ -168,6 +207,20 @@ export default function PolicyPreviewPage() {
     if (htmlLoad !== 'ready' || !navigator.clipboard) return
     try {
       await navigator.clipboard.writeText(htmlCode || '')
+      setCopied(true)
+    } catch {
+      /* clipboard blocked — no-op */
+    }
+  }
+
+  /**
+   * Copy the fetched <script> embed tag to the clipboard and briefly show the "Copied!" state.
+   * @returns {Promise<void>}
+   */
+  async function handleCopyScript() {
+    if (scriptLoad !== 'ready' || !navigator.clipboard) return
+    try {
+      await navigator.clipboard.writeText(scriptCode || '')
       setCopied(true)
     } catch {
       /* clipboard blocked — no-op */
@@ -195,7 +248,7 @@ export default function PolicyPreviewPage() {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: teamEmail.trim() }),
+          body: JSON.stringify({ email: teamEmail.trim(), format: sendFormat }),
         },
       )
       if (res.status === 401 || res.status === 403) {
@@ -634,7 +687,9 @@ export default function PolicyPreviewPage() {
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
-            {(addStep === 'method' || addStep === 'html') && (
+            {(addStep === 'method' ||
+              addStep === 'html' ||
+              addStep === 'script') && (
               <div className="cp-add-head">
                 <h2>Add cookie policy to your site</h2>
                 <p className="cp-add-url">{url || 'this website'}</p>
@@ -655,6 +710,19 @@ export default function PolicyPreviewPage() {
                   </div>
                   <p>
                     Manually update the code on your site each time you modify
+                    the generated policy.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  className="cp-method-card"
+                  onClick={openScriptStep}
+                >
+                  <div className="cp-method-title">
+                    <h3>Code snippet</h3>
+                  </div>
+                  <p>
+                    Automatically update your cookie policy each time you modify
                     the generated policy.
                   </p>
                 </button>
@@ -717,7 +785,10 @@ export default function PolicyPreviewPage() {
                   <button
                     type="button"
                     className="cp-btn"
-                    onClick={() => setAddStep('send')}
+                    onClick={() => {
+                      setSendFormat('html')
+                      setAddStep('send')
+                    }}
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -744,12 +815,105 @@ export default function PolicyPreviewPage() {
                 </p>
               </div>
             )}
+            {addStep === 'script' && (
+              <div className="cp-add-body">
+                <button
+                  type="button"
+                  className="cp-code-back"
+                  onClick={() => setAddStep('method')}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="15"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  Back
+                </button>
+                <p className="cp-step-label">
+                  <strong>Step 1:</strong> Copy this code.
+                </p>
+                <textarea
+                  className="cp-code-box"
+                  readOnly
+                  value={
+                    scriptLoad === 'loading'
+                      ? 'Generating…'
+                      : scriptLoad === 'error'
+                        ? 'Could not generate the code.'
+                        : scriptCode || ''
+                  }
+                  onFocus={(e) => e.target.select()}
+                  aria-label="Cookie policy script code"
+                />
+                <div className="cp-code-actions">
+                  {scriptLoad === 'error' ? (
+                    <button
+                      type="button"
+                      className="cp-btn"
+                      onClick={loadScript}
+                    >
+                      Retry
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="cp-btn"
+                      onClick={handleCopyScript}
+                      disabled={scriptLoad !== 'ready'}
+                    >
+                      {copied ? 'Copied!' : 'Copy code'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="cp-btn"
+                    onClick={() => {
+                      setSendFormat('script')
+                      setAddStep('send')
+                    }}
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <line x1="19" y1="8" x2="19" y2="14" />
+                      <line x1="22" y1="11" x2="16" y2="11" />
+                    </svg>
+                    Send code to a teammate
+                  </button>
+                </div>
+                <p className="cp-step-label">
+                  <strong>Step 2:</strong> Paste the copied code into the
+                  &lt;head&gt; section of your website.
+                </p>
+              </div>
+            )}
             {addStep === 'send' && (
               <div className="cp-add-body">
                 <button
                   type="button"
                   className="cp-code-back"
-                  onClick={() => setAddStep('html')}
+                  onClick={() =>
+                    setAddStep(sendFormat === 'script' ? 'script' : 'html')
+                  }
                 >
                   <svg
                     viewBox="0 0 24 24"
